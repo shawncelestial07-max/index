@@ -8,11 +8,8 @@
   body {
     font-family: Arial, sans-serif;
     background: #f7f7f7;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    margin: 0; padding: 0;
+    display: flex; flex-direction: column; align-items: center;
   }
   h1 {
     margin-top: 20px;
@@ -40,7 +37,6 @@
     font-weight: bold;
     transform: scale(1.05);
   }
-  /* Member colors */
   .member.meca { background: #9b59b6; } 
   .member.johny { background: #27ae60; } 
   .member.jerome { background: #2980b9; } 
@@ -62,8 +58,16 @@
     margin-bottom: 12px;
     text-align: center;
   }
+  #taskInputWrapper {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
   #newTaskInput {
-    width: 65%;
+    flex-grow: 1;
+    min-width: 200px;
     padding: 10px;
     font-size: 1em;
     border: 1px solid #ccc;
@@ -72,7 +76,6 @@
   #addTaskBtn {
     padding: 10px 16px;
     font-size: 1em;
-    margin-left: 8px;
     cursor: pointer;
     border: none;
     background-color: #3498db;
@@ -86,7 +89,7 @@
   ul#taskList {
     list-style: none;
     padding: 0;
-    margin-top: 20px;
+    margin-top: 0;
   }
   ul#taskList li {
     padding: 12px;
@@ -124,9 +127,7 @@
     margin-right: 8px;
     transition: background-color 0.3s;
   }
-  button.completeBtn:hover {
-    background: #1e8449;
-  }
+  button.completeBtn:hover { background: #1e8449; }
   button.deleteBtn {
     background: #e74c3c;
     border: none;
@@ -136,20 +137,14 @@
     cursor: pointer;
     transition: background-color 0.3s;
   }
-  button.deleteBtn:hover {
-    background: #c0392b;
-  }
+  button.deleteBtn:hover { background: #c0392b; }
+
   #confetti-canvas {
     position: fixed;
     pointer-events: none;
     top: 0; left: 0;
     width: 100%; height: 100%;
     z-index: 9999;
-  }
-  @media(max-width:500px){
-    #newTaskInput { width: 60%; }
-    #addTaskBtn { margin-top:10px; width: 35%; }
-    #taskSection { padding: 15px; }
   }
 </style>
 </head>
@@ -168,9 +163,10 @@
 
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
-  <input type="text" id="newTaskInput" placeholder="Enter new task..." />
-  <button id="addTaskBtn">Add Task</button>
-
+  <div id="taskInputWrapper">
+    <input type="text" id="newTaskInput" placeholder="Enter new task..." />
+    <button id="addTaskBtn">Add Task</button>
+  </div>
   <ul id="taskList"></ul>
 </section>
 
@@ -179,9 +175,9 @@
 <!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
-// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
   authDomain: "teamtasktracker-d2c06.firebaseapp.com",
@@ -205,13 +201,13 @@ const newTaskInput = document.getElementById("newTaskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
 
-// Save tasks for a member
+// Save tasks
 async function saveTasksForMember(member){
   if(!member) return;
   await db.collection("tasks").doc(member).set({ tasks:data[member] || [] });
 }
 
-// Load tasks for a member
+// Load tasks
 async function loadTasksForMember(member){
   if(!member) return;
   const doc = await db.collection("tasks").doc(member).get();
@@ -231,7 +227,6 @@ function renderTasks(){
   if(!selectedMember){ taskSection.style.display="none"; return; }
   taskSection.style.display="block";
   memberTitle.textContent = selectedMember+"'s Tasks";
-
   const tasks = data[selectedMember] || [];
   tasks.forEach((task,index)=>{
     const li=document.createElement("li");
@@ -302,9 +297,6 @@ function showConfetti() {
   })();
 }
 </script>
-
-<!-- Confetti library -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 </body>
 </html>
