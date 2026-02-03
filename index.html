@@ -116,7 +116,6 @@
 
   .task-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
   .task-text { flex-grow: 1; margin-right: 10px; word-wrap: break-word; }
-  .timestamp { font-size: 0.75em; color: #7f8c8d; margin-top: 4px; }
 
   button.completeBtn, button.deleteBtn {
     padding: 8px 12px;
@@ -219,12 +218,6 @@ function renderMembers(){
   });
 }
 
-function formatTimestamp(ts){
-  if(!ts) return "-";
-  const d = ts.toDate();
-  return d.toLocaleString();
-}
-
 function renderTasks(){
   taskList.innerHTML="";
   if(!selectedMember){ taskSection.style.display="none"; return; }
@@ -250,9 +243,9 @@ function renderTasks(){
       completeBtn.className="completeBtn";
       completeBtn.onclick = async ()=>{
         data[selectedMember][index].completed=true;
-        data[selectedMember][index].completedAt = firebase.firestore.FieldValue.serverTimestamp();
         await saveTasksForMember(selectedMember);
-        renderTasks(); showConfetti();
+        renderTasks();
+        showConfetti();
       };
       row.appendChild(completeBtn);
     }
@@ -268,13 +261,6 @@ function renderTasks(){
     row.appendChild(deleteBtn);
 
     li.appendChild(row);
-
-    // Timestamp
-    const tsDiv = document.createElement("div");
-    tsDiv.className="timestamp";
-    tsDiv.textContent = `Added: ${formatTimestamp(task.createdAt)} | Completed: ${formatTimestamp(task.completedAt)}`;
-    li.appendChild(tsDiv);
-
     taskList.appendChild(li);
   });
 }
@@ -282,12 +268,7 @@ function renderTasks(){
 addTaskBtn.addEventListener("click", async ()=>{
   const taskText = newTaskInput.value.trim();
   if(!taskText) return;
-  data[selectedMember].push({
-    text: taskText,
-    completed: false,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    completedAt: null
-  });
+  data[selectedMember].push({ text: taskText, completed:false });
   newTaskInput.value="";
   await saveTasksForMember(selectedMember);
   renderTasks();
