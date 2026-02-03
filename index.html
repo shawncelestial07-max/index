@@ -7,15 +7,19 @@
 <style>
   body {
     font-family: Arial, sans-serif;
+    margin: 0;
     background: #f7f7f7;
-    margin: 0; padding: 0;
-    display: flex; flex-direction: column; align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
+
   h1 {
     margin-top: 20px;
-    text-align: center;
     font-size: 1.8em;
+    text-align: center;
   }
+
   #members {
     display: flex;
     flex-wrap: wrap;
@@ -23,26 +27,29 @@
     margin: 15px 0;
     justify-content: center;
   }
+
   .member {
-    padding: 10px 18px;
+    padding: 10px 16px;
     border-radius: 8px;
     cursor: pointer;
     color: white;
-    user-select: none;
     opacity: 0.7;
-    transition: opacity 0.3s, transform 0.2s;
+    transition: 0.3s;
   }
+
   .member.active, .member:hover {
     opacity: 1;
     font-weight: bold;
     transform: scale(1.05);
   }
-  .member.meca { background: #9b59b6; } 
-  .member.johny { background: #27ae60; } 
-  .member.jerome { background: #2980b9; } 
-  .member.carl { background: #7f8c8d; } 
-  .member.shawn { background: #f1c40f; color: #333; } 
-  .member.jomar { background: #d35400; } 
+
+  /* Colors */
+  .meca { background: #9b59b6; }
+  .johny { background: #27ae60; }
+  .jerome { background: #2980b9; }
+  .carl { background: #7f8c8d; }
+  .shawn { background: #f1c40f; color: #333; }
+  .jomar { background: #d35400; }
 
   #taskSection {
     width: 95%;
@@ -53,90 +60,81 @@
     box-shadow: 0 0 10px #ccc;
     margin-bottom: 30px;
   }
+
   #taskSection h2 {
     margin-top: 0;
-    margin-bottom: 12px;
     text-align: center;
   }
+
   #taskInputWrapper {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
     gap: 10px;
     margin-bottom: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
   }
+
   #newTaskInput {
-    flex-grow: 1;
-    min-width: 200px;
+    flex: 1 1 200px;
     padding: 10px;
-    font-size: 1em;
-    border: 1px solid #ccc;
     border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1em;
   }
+
   #addTaskBtn {
     padding: 10px 16px;
     font-size: 1em;
-    cursor: pointer;
     border: none;
+    border-radius: 8px;
     background-color: #3498db;
     color: white;
-    border-radius: 8px;
-    transition: background-color 0.3s;
+    cursor: pointer;
   }
-  #addTaskBtn:hover {
-    background-color: #2980b9;
-  }
+
+  #addTaskBtn:hover { background-color: #2980b9; }
+
   ul#taskList {
     list-style: none;
     padding: 0;
-    margin-top: 0;
+    margin: 0;
   }
+
   ul#taskList li {
     padding: 12px;
     margin-bottom: 10px;
     background: #ecf0f1;
     border-radius: 8px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #333;
     flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
   }
+
   ul#taskList li.completed {
     background: #d5f5e3;
     color: #27ae60;
     font-weight: bold;
   }
+
   .task-text {
-    flex-grow: 1;
+    flex: 1;
     margin-right: 10px;
     word-break: break-word;
   }
-  .status {
-    font-weight: bold;
-    color: #27ae60;
-    margin-left: 8px;
-  }
-  button.completeBtn {
-    background: #27ae60;
-    border: none;
-    color: white;
+
+  button.completeBtn, button.deleteBtn {
     padding: 6px 10px;
+    border: none;
     border-radius: 6px;
     cursor: pointer;
-    margin-right: 8px;
-    transition: background-color 0.3s;
+    margin: 2px;
   }
+
+  button.completeBtn { background: #27ae60; color: white; }
   button.completeBtn:hover { background: #1e8449; }
-  button.deleteBtn {
-    background: #e74c3c;
-    border: none;
-    color: white;
-    padding: 6px 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
+
+  button.deleteBtn { background: #e74c3c; color: white; }
   button.deleteBtn:hover { background: #c0392b; }
 
   #confetti-canvas {
@@ -172,12 +170,12 @@
 
 <canvas id="confetti-canvas"></canvas>
 
-<!-- Firebase scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
+// ===== Firebase config =====
 const firebaseConfig = {
   apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
   authDomain: "teamtasktracker-d2c06.firebaseapp.com",
@@ -186,14 +184,15 @@ const firebaseConfig = {
   messagingSenderId: "1030000534391",
   appId: "1:1030000534391:web:9e7266bd8979b98351f772"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ===== Variables =====
 let selectedMember = null;
 let data = {};
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar"];
 
+// ===== DOM Elements =====
 const membersDiv = document.getElementById("members");
 const taskSection = document.getElementById("taskSection");
 const memberTitle = document.getElementById("memberTitle");
@@ -201,66 +200,62 @@ const newTaskInput = document.getElementById("newTaskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
 
-// Save tasks
-async function saveTasksForMember(member){
-  if(!member) return;
-  await db.collection("tasks").doc(member).set({ tasks:data[member] || [] });
-}
-
-// Load tasks
-async function loadTasksForMember(member){
-  if(!member) return;
+// ===== Functions =====
+async function loadTasks(member) {
   const doc = await db.collection("tasks").doc(member).get();
   data[member] = doc.exists ? doc.data().tasks : [];
 }
 
-// Render members
-function renderMembers(){
-  Array.from(membersDiv.children).forEach(div=>{
+async function saveTasks(member) {
+  await db.collection("tasks").doc(member).set({tasks:data[member]});
+}
+
+function renderMembers() {
+  Array.from(membersDiv.children).forEach(div => {
     div.classList.toggle("active", div.dataset.member===selectedMember);
   });
 }
 
-// Render tasks
-function renderTasks(){
+function renderTasks() {
   taskList.innerHTML = "";
   if(!selectedMember){ taskSection.style.display="none"; return; }
   taskSection.style.display="block";
   memberTitle.textContent = selectedMember+"'s Tasks";
+
   const tasks = data[selectedMember] || [];
   tasks.forEach((task,index)=>{
-    const li=document.createElement("li");
-    li.className = task.completed?"completed":"";
+    const li = document.createElement("li");
+    li.className = task.completed ? "completed" : "";
 
-    const spanText=document.createElement("span");
-    spanText.textContent = task.text;
-    spanText.className="task-text";
-    li.appendChild(spanText);
+    const span = document.createElement("span");
+    span.textContent = task.text;
+    span.className = "task-text";
+    li.appendChild(span);
 
-    if(task.completed){
-      const status=document.createElement("span");
-      status.textContent="COMPLETED";
-      status.className="status";
-      li.appendChild(status);
-    } else {
-      const completeBtn=document.createElement("button");
-      completeBtn.textContent="Complete";
-      completeBtn.className="completeBtn";
-      completeBtn.onclick=async()=>{
-        data[selectedMember][index].completed=true;
-        await saveTasksForMember(selectedMember);
+    if(!task.completed){
+      const completeBtn = document.createElement("button");
+      completeBtn.textContent = "Complete";
+      completeBtn.className = "completeBtn";
+      completeBtn.onclick = async () => {
+        data[selectedMember][index].completed = true;
+        await saveTasks(selectedMember);
         renderTasks();
         showConfetti();
       };
       li.appendChild(completeBtn);
+    } else {
+      const status = document.createElement("span");
+      status.textContent = "COMPLETED";
+      status.className = "status";
+      li.appendChild(status);
     }
 
-    const deleteBtn=document.createElement("button");
-    deleteBtn.textContent="Remove";
-    deleteBtn.className="deleteBtn";
-    deleteBtn.onclick=async()=>{
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Remove";
+    deleteBtn.className = "deleteBtn";
+    deleteBtn.onclick = async () => {
       data[selectedMember].splice(index,1);
-      await saveTasksForMember(selectedMember);
+      await saveTasks(selectedMember);
       renderTasks();
     };
     li.appendChild(deleteBtn);
@@ -269,34 +264,33 @@ function renderTasks(){
   });
 }
 
-// Add task
-addTaskBtn.addEventListener("click", async ()=>{
-  const taskText=newTaskInput.value.trim(); if(!taskText) return;
-  data[selectedMember].push({text:taskText, completed:false});
-  newTaskInput.value="";
-  await saveTasksForMember(selectedMember);
-  renderTasks();
-});
-
-// Select member
-membersDiv.addEventListener("click", async e=>{
+// ===== Event Listeners =====
+membersDiv.addEventListener("click", async e => {
   if(!e.target.classList.contains("member")) return;
   selectedMember = e.target.dataset.member;
-  await loadTasksForMember(selectedMember);
+  await loadTasks(selectedMember);
   renderMembers();
   renderTasks();
 });
 
-// Confetti
-function showConfetti() {
+addTaskBtn.addEventListener("click", async ()=>{
+  const text = newTaskInput.value.trim();
+  if(!text) return;
+  data[selectedMember].push({text, completed:false});
+  newTaskInput.value = "";
+  await saveTasks(selectedMember);
+  renderTasks();
+});
+
+// ===== Confetti =====
+function showConfetti(){
   const duration = 3*1000;
-  const end = Date.now()+duration;
-  (function frame(){ 
-    confetti({ particleCount: 5, spread: 70, origin: { y: 0.6 } }); 
-    if(Date.now()<end) requestAnimationFrame(frame); 
+  const end = Date.now() + duration;
+  (function frame(){
+    confetti({ particleCount: 5, spread: 70, origin:{y:0.6} });
+    if(Date.now()<end) requestAnimationFrame(frame);
   })();
 }
 </script>
-
 </body>
 </html>
