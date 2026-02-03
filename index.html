@@ -15,6 +15,12 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark-mode {
+  background: #121212;
+  color: #f0f0f0;
 }
 
 h1 {
@@ -22,6 +28,20 @@ h1 {
   font-size: 1.8em;
   text-align: center;
   color: #2c3e50;
+}
+
+body.dark-mode h1 {
+  color: #f0f0f0;
+}
+
+#darkModeToggle {
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #3498db;
+  color: white;
 }
 
 #members {
@@ -66,14 +86,29 @@ h1 {
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
   margin-bottom: 40px;
+  transition: background 0.3s, color 0.3s;
 }
 
-#newTaskInput {
+body.dark-mode #taskSection {
+  background: #1e1e1e;
+  color: #f0f0f0;
+}
+
+#newTaskInput, #dueDateInput {
   width: 100%;
   padding: 12px;
   margin-bottom: 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
+  box-sizing: border-box;
+  transition: background 0.3s, color 0.3s, border 0.3s;
+}
+
+body.dark-mode #newTaskInput,
+body.dark-mode #dueDateInput {
+  background: #2c2c2c;
+  color: #f0f0f0;
+  border: 1px solid #555;
 }
 
 #addTaskBtn {
@@ -101,6 +136,12 @@ ul#taskList li {
   background: #ecf0f1;
   border-radius: 8px;
   margin-bottom: 10px;
+  transition: background 0.3s, color 0.3s;
+}
+
+body.dark-mode ul#taskList li {
+  background: #2c2c2c;
+  color: #f0f0f0;
 }
 
 ul#taskList li.completed {
@@ -158,6 +199,7 @@ button.deleteBtn {
 <body>
 
 <h1>Team Task Tracker</h1>
+<button id="darkModeToggle">🌙 Dark Mode</button>
 
 <div id="members">
   <div class="member meca" data-member="Meca">Meca</div>
@@ -171,30 +213,35 @@ button.deleteBtn {
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
   <input type="text" id="newTaskInput" placeholder="Enter new task..." />
+  <input type="date" id="dueDateInput" />
   <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
 
 <canvas id="confetti-canvas"></canvas>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
-  authDomain: "teamtasktracker-d2c06.firebaseapp.com",
-  projectId: "teamtasktracker-d2c06",
-  storageBucket: "teamtasktracker-d2c06.firebasestorage.app",
-  messagingSenderId: "1030000534391",
-  appId: "1:1030000534391:web:9e7266bd8979b98351f772"
+// --- DARK MODE ---
+const darkModeToggle = document.getElementById("darkModeToggle");
+if(localStorage.getItem("darkMode") === "enabled"){
+  document.body.classList.add("dark-mode");
+  darkModeToggle.textContent = "☀️ Light Mode";
+}
+
+darkModeToggle.onclick = () => {
+  document.body.classList.toggle("dark-mode");
+  if(document.body.classList.contains("dark-mode")){
+    localStorage.setItem("darkMode","enabled");
+    darkModeToggle.textContent = "☀️ Light Mode";
+  } else {
+    localStorage.setItem("darkMode","disabled");
+    darkModeToggle.textContent = "🌙 Dark Mode";
+  }
 };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
+// --- TASK TRACKER ---
 let selectedMember = null;
 let data = {};
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar"];
@@ -203,6 +250,7 @@ const membersDiv = document.getElementById("members");
 const taskSection = document.getElementById("taskSection");
 const memberTitle = document.getElementById("memberTitle");
 const newTaskInput = document.getElementById("newTaskInput");
+const dueDateInput = document.getElementById("dueDateInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
 
@@ -215,16 +263,16 @@ function showConfetti() {
   })();
 }
 
-async function loadAllTasks(){
-  const snapshot = await db.collection("tasks").get();
-  data = {};
-  snapshot.forEach(doc => data[doc.id] = doc.data().tasks || []);
-  members.forEach(m => { if(!data[m]) data[m]=[]; });
+// --- LOCALSTORAGE SAVE/LOAD ---
+function saveTasksForMember(member){
+  localStorage.setItem("tasks_" + member, JSON.stringify(data[member]));
 }
 
-async function saveTasksForMember(member){
-  await db.collection("tasks").doc(member).set({
-    tasks: data[member]
+function loadAllTasks(){
+  data = {};
+  members.forEach(member=>{
+    const tasks = localStorage.getItem("tasks_" + member);
+    data[member] = tasks ? JSON.parse(tasks) : [];
   });
 }
 
@@ -247,11 +295,16 @@ function renderTasks(){
     const li = document.createElement("li");
     if(task.completed) li.classList.add("completed");
 
+    // Highlight overdue tasks
+    if(task.dueDate && !task.completed && new Date(task.dueDate) < new Date()){
+      li.style.background = "#f8d7da"; // light red
+    }
+
     const row = document.createElement("div");
     row.className="task-row";
 
     const text = document.createElement("span");
-    text.textContent = task.text;
+    text.textContent = task.text + (task.dueDate ? ` (Due: ${task.dueDate})` : "");
     text.className="task-text";
     row.appendChild(text);
 
@@ -264,11 +317,11 @@ function renderTasks(){
       const completeBtn = document.createElement("button");
       completeBtn.textContent="Complete";
       completeBtn.className="completeBtn";
-      completeBtn.onclick = async ()=>{
+      completeBtn.onclick = ()=>{
         task.completed = true;
-        await saveTasksForMember(selectedMember);
+        saveTasksForMember(selectedMember);
         renderTasks();
-        showConfetti(); // Confetti trigger
+        showConfetti();
       };
       row.appendChild(completeBtn);
     }
@@ -276,9 +329,9 @@ function renderTasks(){
     const deleteBtn = document.createElement("button");
     deleteBtn.textContent="Remove";
     deleteBtn.className="deleteBtn";
-    deleteBtn.onclick = async ()=>{
+    deleteBtn.onclick = ()=>{
       data[selectedMember].splice(index,1);
-      await saveTasksForMember(selectedMember);
+      saveTasksForMember(selectedMember);
       renderTasks();
     };
 
@@ -288,19 +341,22 @@ function renderTasks(){
   });
 }
 
-addTaskBtn.onclick = async ()=>{
+// --- EVENTS ---
+addTaskBtn.onclick = ()=>{
   const text = newTaskInput.value.trim();
+  const dueDate = dueDateInput.value;
   if(!text) return;
-  data[selectedMember].push({ text, completed:false });
+  data[selectedMember].push({ text, completed:false, dueDate });
   newTaskInput.value="";
-  await saveTasksForMember(selectedMember);
+  dueDateInput.value="";
+  saveTasksForMember(selectedMember);
   renderTasks();
 };
 
-membersDiv.onclick = async (e)=>{
+membersDiv.onclick = (e)=>{
   if(!e.target.classList.contains("member")) return;
   selectedMember = e.target.dataset.member;
-  await loadAllTasks();
+  loadAllTasks();
   renderMembers();
   renderTasks();
 };
