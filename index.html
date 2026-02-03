@@ -6,42 +6,35 @@
 <title>ALL IN THE MIND</title>
 
 <style>
+/* ===== SPACE THEME ===== */
 body {
   font-family: Arial, sans-serif;
-  background: #f7f7f7;
+  background: radial-gradient(ellipse at bottom, #0d0d1a 0%, #000000 100%);
+  color: #e0e0ff;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.3s, color 0.3s;
+  position: relative;
 }
 
-/* ===== DARK MODE (ADDED) ===== */
-body.dark {
-  background: #121212;
-  color: #f1f1f1;
+/* Floating stars canvas */
+#space-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
-body.dark #taskSection {
-  background: #1e1e1e;
-}
-
-body.dark ul#taskList li {
-  background: #2a2a2a;
-}
-
-body.dark h1 {
-  color: #f1f1f1;
-}
-/* ============================ */
-
-h1 {
-  margin: 30px 0 10px;
-  font-size: 1.8em;
+h1, h2 {
   text-align: center;
-  color: #2c3e50;
+  text-shadow: 0 0 10px #7f8cfa, 0 0 20px #3498db;
 }
 
 #members {
@@ -49,9 +42,11 @@ h1 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin: 10px 0 20px;
+  margin: 10px 0 5px;
   width: 90%;
   max-width: 500px;
+  z-index: 1;
+  position: relative;
 }
 
 .member {
@@ -62,6 +57,8 @@ h1 {
   opacity: 0.8;
   transition: 0.2s;
   font-size: 0.9em;
+  border: 1px solid rgba(255,255,255,0.2);
+  text-shadow: 0 0 5px #000;
 }
 
 .member.active,
@@ -69,6 +66,7 @@ h1 {
   opacity: 1;
   font-weight: bold;
   transform: scale(1.05);
+  box-shadow: 0 0 15px #3498db, 0 0 25px #9b59b6;
 }
 
 .member.meca { background: #9b59b6; }
@@ -78,14 +76,21 @@ h1 {
 .member.shawn { background: #f1c40f; color: #333; }
 .member.jomar { background: #d35400; }
 
+#progress {
+  margin-bottom: 15px;
+  font-size: 0.9em;
+}
+
 #taskSection {
   width: 95%;
   max-width: 600px;
-  background: white;
+  background: rgba(10,10,30,0.9);
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 0 20px rgba(50,50,100,0.5);
   margin-bottom: 40px;
+  z-index: 1;
+  position: relative;
 }
 
 #newTaskInput {
@@ -99,7 +104,7 @@ h1 {
 #addTaskBtn {
   width: 100%;
   padding: 12px;
-  background: #3498db;
+  background: linear-gradient(45deg,#3498db,#9b59b6);
   color: white;
   border: none;
   border-radius: 8px;
@@ -107,24 +112,28 @@ h1 {
 }
 
 #addTaskBtn:hover {
-  background: #2980b9;
+  transform: scale(1.02);
 }
 
 ul#taskList {
   list-style: none;
   padding: 0;
   margin-top: 15px;
+  z-index: 1;
+  position: relative;
 }
 
 ul#taskList li {
   padding: 12px;
-  background: #ecf0f1;
+  background: rgba(20,20,40,0.8);
   border-radius: 8px;
   margin-bottom: 10px;
+  transition: all 0.2s;
 }
 
 ul#taskList li.completed {
-  background: #d5f5e3;
+  background: rgba(0,50,0,0.6);
+  color: #b8ffb8;
 }
 
 .task-row {
@@ -163,7 +172,7 @@ button.deleteBtn {
   cursor: pointer;
 }
 
-/* ===== DARK MODE TOGGLE BUTTON (ADDED) ===== */
+/* DARK MODE BUTTON */
 #darkToggle {
   position: fixed;
   top: 12px;
@@ -173,9 +182,9 @@ button.deleteBtn {
   font-size: 18px;
   cursor: pointer;
   opacity: 0.7;
+  z-index: 2;
 }
 #darkToggle:hover { opacity: 1; }
-/* ========================================== */
 
 #confetti-canvas {
   position: fixed;
@@ -190,8 +199,7 @@ button.deleteBtn {
 </head>
 
 <body>
-
-<!-- DARK MODE TOGGLE (ADDED) -->
+<canvas id="space-canvas"></canvas>
 <button id="darkToggle">🌙</button>
 
 <h1>Team Task Tracker</h1>
@@ -204,6 +212,8 @@ button.deleteBtn {
   <div class="member shawn" data-member="Shawn">Shawn</div>
   <div class="member jomar" data-member="Jomar">Jomar</div>
 </div>
+
+<div id="progress"></div>
 
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
@@ -219,6 +229,7 @@ button.deleteBtn {
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
+// ====== Firebase setup ======
 const firebaseConfig = {
   apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
   authDomain: "teamtasktracker-d2c06.firebaseapp.com",
@@ -227,10 +238,10 @@ const firebaseConfig = {
   messagingSenderId: "1030000534391",
   appId: "1:1030000534391:web:9e7266bd8979b98351f772"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ====== Variables ======
 let selectedMember = null;
 let data = {};
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar"];
@@ -241,25 +252,27 @@ const memberTitle = document.getElementById("memberTitle");
 const newTaskInput = document.getElementById("newTaskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
-
-/* ===== DARK MODE LOGIC (ADDED) ===== */
+const progressDiv = document.getElementById("progress");
 const darkToggle = document.getElementById("darkToggle");
+
+// ====== Dark mode toggle ======
 darkToggle.onclick = () => {
   document.body.classList.toggle("dark");
-  darkToggle.textContent =
-    document.body.classList.contains("dark") ? "☀️" : "🌙";
+  darkToggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
 };
-/* ================================= */
 
+// ====== Confetti ======
 function showConfetti() {
   const duration = 2000;
   const end = Date.now() + duration;
   (function frame() {
-    confetti({ particleCount: 5, spread: 70, origin: { y: 0.6 } });
+    confetti({ particleCount: 5, spread: 70, origin: { y: 0.6 },
+      colors: ["#9b59b6","#3498db","#f1c40f","#e74c3c"] });
     if (Date.now() < end) requestAnimationFrame(frame);
   })();
 }
 
+// ====== Load and Save ======
 async function loadAllTasks(){
   const snapshot = await db.collection("tasks").get();
   data = {};
@@ -273,12 +286,26 @@ async function saveTasksForMember(member){
   });
 }
 
+// ====== Render Members ======
 function renderMembers(){
   [...membersDiv.children].forEach(div=>{
     div.classList.toggle("active", div.dataset.member === selectedMember);
   });
 }
 
+// ====== Render Progress ======
+function renderProgress(){
+  if(!selectedMember) {
+    progressDiv.textContent = "";
+    return;
+  }
+  const total = data[selectedMember].length;
+  const completed = data[selectedMember].filter(t => t.completed).length;
+  const percent = total ? Math.round((completed/total)*100) : 0;
+  progressDiv.textContent = `Progress: ${completed}/${total} tasks completed (${percent}%)`;
+}
+
+// ====== Render Tasks (with Deadline Highlighting) ======
 function renderTasks(){
   taskList.innerHTML="";
   if(!selectedMember){
@@ -287,7 +314,9 @@ function renderTasks(){
   }
   taskSection.style.display="block";
   memberTitle.textContent = selectedMember + "'s Tasks";
+  renderProgress();
 
+  const now = new Date();
   data[selectedMember].forEach((task,index)=>{
     const li = document.createElement("li");
     if(task.completed) li.classList.add("completed");
@@ -299,6 +328,13 @@ function renderTasks(){
     text.textContent = task.text;
     text.className="task-text";
     row.appendChild(text);
+
+    // ====== Deadline Highlighting ======
+    if(task.deadline && !task.completed){
+      const deadlineDate = new Date(task.deadline);
+      if(deadlineDate < now) li.style.border = "2px solid red";
+      else if(deadlineDate.toDateString() === now.toDateString()) li.style.border = "2px solid orange";
+    }
 
     if(task.completed){
       const status = document.createElement("span");
@@ -333,6 +369,7 @@ function renderTasks(){
   });
 }
 
+// ====== Add Task ======
 addTaskBtn.onclick = async ()=>{
   const text = newTaskInput.value.trim();
   if(!text) return;
@@ -342,6 +379,7 @@ addTaskBtn.onclick = async ()=>{
   renderTasks();
 };
 
+// ====== Member Selection ======
 membersDiv.onclick = async (e)=>{
   if(!e.target.classList.contains("member")) return;
   selectedMember = e.target.dataset.member;
@@ -350,7 +388,38 @@ membersDiv.onclick = async (e)=>{
   renderTasks();
 };
 
+// ====== Load on start ======
 window.onload = loadAllTasks;
+
+// ====== Space Stars Background ======
+const canvas = document.getElementById('space-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let stars = [];
+for(let i=0;i<150;i++){
+  stars.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*1.2, dx:(Math.random()-0.5)*0.2, dy:(Math.random()-0.5)*0.2 });
+}
+
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  stars.forEach(s=>{
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    s.x+=s.dx; s.y+=s.dy;
+    if(s.x<0)s.x=canvas.width;
+    if(s.x>canvas.width)s.x=0;
+    if(s.y<0)s.y=canvas.height;
+    if(s.y>canvas.height)s.y=0;
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+window.addEventListener('resize',()=>{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 </script>
 
 </body>
