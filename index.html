@@ -142,6 +142,16 @@ button.deleteBtn {
   border-radius: 6px;
   cursor: pointer;
 }
+
+#confetti-canvas {
+  position: fixed;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+}
 </style>
 </head>
 
@@ -165,9 +175,12 @@ button.deleteBtn {
   <ul id="taskList"></ul>
 </section>
 
+<canvas id="confetti-canvas"></canvas>
+
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -192,6 +205,15 @@ const memberTitle = document.getElementById("memberTitle");
 const newTaskInput = document.getElementById("newTaskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
+
+function showConfetti() {
+  const duration = 2 * 1000;
+  const end = Date.now() + duration;
+  (function frame() {
+    confetti({ particleCount: 5, spread: 70, origin: { y: 0.6 } });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
 
 async function loadAllTasks(){
   const snapshot = await db.collection("tasks").get();
@@ -218,7 +240,6 @@ function renderTasks(){
     taskSection.style.display="none";
     return;
   }
-
   taskSection.style.display="block";
   memberTitle.textContent = selectedMember + "'s Tasks";
 
@@ -247,6 +268,7 @@ function renderTasks(){
         task.completed = true;
         await saveTasksForMember(selectedMember);
         renderTasks();
+        showConfetti(); // Confetti trigger
       };
       row.appendChild(completeBtn);
     }
