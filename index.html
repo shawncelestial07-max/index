@@ -94,6 +94,14 @@ h1, h2 {
   border: 1px solid #ddd;
 }
 
+#dueDateInput {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
 #addTaskBtn {
   width: 100%;
   padding: 12px;
@@ -134,6 +142,14 @@ ul#taskList li.completed {
 .task-text {
   flex-grow: 1;
   margin-right: 10px;
+}
+
+/* Small date info */
+.task-info {
+  font-size: 0.75em;
+  color: #666;
+  margin-top: 6px;
+  width: 100%;
 }
 
 /* Status labels */
@@ -226,7 +242,8 @@ body.dark ul#taskList li {
   border-color: #333;
 }
 
-body.dark #newTaskInput {
+body.dark #newTaskInput,
+body.dark #dueDateInput {
   background: #2a2a2a;
   color: #f1f1f1;
   border-color: #444;
@@ -260,6 +277,7 @@ body.dark .member.active {
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
   <input type="text" id="newTaskInput" placeholder="Enter new task..." />
+  <input type="date" id="dueDateInput" />
   <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
@@ -296,6 +314,7 @@ body.dark .member.active {
  const taskSection = document.getElementById("taskSection");
  const memberTitle = document.getElementById("memberTitle");
  const newTaskInput = document.getElementById("newTaskInput");
+ const dueDateInput = document.getElementById("dueDateInput");
  const addTaskBtn = document.getElementById("addTaskBtn");
  const taskList = document.getElementById("taskList");
  const progressDiv = document.getElementById("progress");
@@ -414,6 +433,14 @@ body.dark .member.active {
      text.textContent = task.text;
      row.appendChild(text);
 
+     // Small date info
+     const info = document.createElement("div");
+     info.className = "task-info";
+     const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
+     const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date";
+     info.textContent = `Created: ${created} • Due: ${due}`;
+     row.appendChild(info);
+
      const status = document.createElement("span");
      status.className = "status " + (task.completed ? "completed" : "pending");
      status.textContent = task.completed ? "COMPLETED" : "PENDING";
@@ -464,8 +491,16 @@ body.dark .member.active {
    if (!token.claims.admin) return alert("Admin only");
 
    if(!newTaskInput.value.trim()) return;
-   data[selectedMember].push({ text:newTaskInput.value, completed:false });
-   newTaskInput.value="";
+
+   data[selectedMember].push({
+     text: newTaskInput.value,
+     completed: false,
+     createdAt: Date.now(),
+     dueDate: dueDateInput.value
+   });
+
+   newTaskInput.value = "";
+   dueDateInput.value = "";
    await saveTasksForMember(selectedMember);
    renderTasks();
  };
