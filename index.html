@@ -24,6 +24,30 @@ h1, h2 {
   font-weight: 600;
 }
 
+#loginSection {
+  margin-top: 10px;
+  width: 90%;
+  max-width: 520px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+#loginSection input {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+
+#loginSection button {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #2d6cdf;
+  color: white;
+  cursor: pointer;
+}
+
 /* ===== MEMBERS ===== */
 #members {
   display: flex;
@@ -216,6 +240,13 @@ body.dark .member.active {
 
 <h1>Team Task Tracker</h1>
 
+<div id="loginSection">
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button id="loginBtn">Login</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
+</div>
+
 <div id="members">
   <div class="member" data-member="Meca">Meca</div>
   <div class="member" data-member="Johny">Johny</div>
@@ -237,6 +268,7 @@ body.dark .member.active {
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
@@ -247,6 +279,7 @@ body.dark .member.active {
    projectId: "teamtasktracker-d2c06"
  });
  const db = firebase.firestore();
+ const auth = firebase.auth();
 
  // ===== Variables =====
  let selectedMember = null;
@@ -261,22 +294,57 @@ body.dark .member.active {
  const taskList = document.getElementById("taskList");
  const progressDiv = document.getElementById("progress");
 
+ const emailInput = document.getElementById("email");
+ const passInput = document.getElementById("password");
+ const loginBtn = document.getElementById("loginBtn");
+ const logoutBtn = document.getElementById("logoutBtn");
+
  // ===== Dark Mode Toggle (FIXED) =====
  const darkToggle = document.getElementById("darkToggle");
 
- // Load saved mode
  if (localStorage.getItem("darkMode") === "true") {
    document.body.classList.add("dark");
    darkToggle.textContent = "☀️";
  }
 
- // Toggle mode
  darkToggle.onclick = () => {
    document.body.classList.toggle("dark");
    const isDark = document.body.classList.contains("dark");
    localStorage.setItem("darkMode", isDark);
    darkToggle.textContent = isDark ? "☀️" : "🌙";
  };
+
+ // ===== Auth Login =====
+ loginBtn.onclick = () => {
+   const email = emailInput.value.trim();
+   const pass = passInput.value.trim();
+   if (!email || !pass) return alert("Enter email & password");
+
+   auth.signInWithEmailAndPassword(email, pass)
+     .then(() => {
+       emailInput.value = "";
+       passInput.value = "";
+     })
+     .catch(err => alert(err.message));
+ };
+
+ logoutBtn.onclick = () => auth.signOut();
+
+ // ===== Auth State =====
+ auth.onAuthStateChanged(async user => {
+   if (!user) {
+     addTaskBtn.disabled = true;
+     logoutBtn.style.display = "none";
+     loginBtn.style.display = "block";
+     return;
+   }
+
+   logoutBtn.style.display = "block";
+   loginBtn.style.display = "none";
+
+   const token = await user.getIdTokenResult();
+   addTaskBtn.disabled = !token.claims.admin;
+ });
 
  // ===== Load / Save =====
  async function loadAllTasks(){
