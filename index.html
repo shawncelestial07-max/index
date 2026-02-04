@@ -287,9 +287,6 @@ button.deleteBtn {
   .grid {
     grid-template-columns: 1fr;
   }
-  #membersCard {
-    display: none; /* hide member list on mobile */
-  }
 }
 </style>
 </head>
@@ -386,9 +383,6 @@ button.deleteBtn {
  const loginBtn = document.getElementById("loginBtn");
  const logoutBtn = document.getElementById("logoutBtn");
 
- // ===== Dark Mode Toggle (FIXED) =====
- // removed for simplicity (you can add back later)
-
  // ===== Auth Login =====
  loginBtn.onclick = () => {
    const email = emailInput.value.trim();
@@ -413,7 +407,7 @@ button.deleteBtn {
      loginBtn.style.display = "block";
      emailInput.style.display = "inline-block";
      passInput.style.display = "inline-block";
-     graphSection.style.display = "none"; // hide graph for guests
+     graphSection.style.display = "none";
      return;
    }
 
@@ -613,7 +607,6 @@ button.deleteBtn {
    selectedMember = e.target.closest(".member").dataset.member;
 
    // MEMBER MODE
-   isMemberMode = true;
    document.getElementById("membersCard").style.display = "none";
    graphSection.style.display = "none";
 
