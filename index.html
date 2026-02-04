@@ -114,7 +114,8 @@ h1, h2 {
 #dueDateInput {
   position: absolute;
   opacity: 0;
-  pointer-events: none;
+  width: 1px;
+  height: 1px;
 }
 
 #addTaskBtn {
@@ -189,6 +190,7 @@ button.completeBtn {
   padding: 8px 12px;
   border-radius: 8px;
   cursor: pointer;
+  margin-right: 8px;
 }
 
 button.deleteBtn {
@@ -463,7 +465,14 @@ body.dark .member.active {
 
      const text = document.createElement("span");
      text.className = "task-text";
-     text.textContent = task.text;
+
+     // completed check icon
+     if(task.completed){
+       text.innerHTML = "✔️ " + task.text;
+     } else {
+       text.textContent = task.text;
+     }
+
      row.appendChild(text);
 
      // Small date info
@@ -479,7 +488,7 @@ body.dark .member.active {
      status.textContent = task.completed ? "COMPLETED" : "PENDING";
      row.appendChild(status);
 
-     // ✔ Anyone can complete
+     // ✔ Anyone can complete (button above Remove)
      if(!task.completed){
        const completeBtn = document.createElement("button");
        completeBtn.className="completeBtn";
