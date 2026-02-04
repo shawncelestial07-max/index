@@ -419,7 +419,7 @@ body.dark .member.active {
      status.textContent = task.completed ? "COMPLETED" : "PENDING";
      row.appendChild(status);
 
-     // ✔ Everyone can mark completed
+     // ✔ Anyone can complete
      if(!task.completed){
        const completeBtn = document.createElement("button");
        completeBtn.className="completeBtn";
@@ -433,7 +433,7 @@ body.dark .member.active {
        row.appendChild(completeBtn);
      }
 
-     // ❌ ONLY ADMIN can delete
+     // ❌ Admin only delete
      const deleteBtn = document.createElement("button");
      deleteBtn.className="deleteBtn";
      deleteBtn.textContent="Remove";
