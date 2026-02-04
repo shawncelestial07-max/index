@@ -314,6 +314,28 @@ body.dark .member.active {
   background: var(--red);
   color: white;
 }
+
+/* ===== GRAPH SECTION ===== */
+#graphSection {
+  width: 95%;
+  max-width: 700px;
+  background: var(--card);
+  padding: 22px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px var(--shadow);
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+#graphTitle {
+  margin-bottom: 14px;
+  font-weight: 700;
+}
+
+#chart {
+  width: 100%;
+  height: 320px;
+}
 </style>
 </head>
 
@@ -342,6 +364,12 @@ body.dark .member.active {
   <ul id="taskList"></ul>
 </section>
 
+<!-- GRAPH SECTION -->
+<section id="graphSection">
+  <div id="graphTitle">Team Performance Graph</div>
+  <canvas id="chart"></canvas>
+</section>
+
 <div id="popup">
   <div id="popupBox">
     <div style="font-weight:700; font-size:16px;">Set Schedule</div>
@@ -363,6 +391,9 @@ body.dark .member.active {
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
  // ===== Firebase =====
@@ -397,6 +428,10 @@ body.dark .member.active {
  const passInput = document.getElementById("password");
  const loginBtn = document.getElementById("loginBtn");
  const logoutBtn = document.getElementById("logoutBtn");
+
+ // Graph
+ let chart = null;
+ const ctx = document.getElementById("chart").getContext("2d");
 
  // ===== Dark Mode Toggle (FIXED) =====
  const darkToggle = document.getElementById("darkToggle");
@@ -460,11 +495,13 @@ body.dark .member.active {
    snap.forEach(d => data[d.id] = d.data().tasks || []);
    members.forEach(m => { if(!data[m]) data[m] = []; });
    renderMembers();
+   renderGraph();
  }
 
  async function saveTasksForMember(member){
    await db.collection("tasks").doc(member).set({ tasks: data[member] });
    renderMembers();
+   renderGraph();
  }
 
  // ===== Render Members (with pending count) =====
@@ -495,7 +532,7 @@ body.dark .member.active {
    memberTitle.textContent = selectedMember + "'s Tasks";
    renderProgress();
 
-   data[selectedMember].forEach((task,i)=>{
+   data[selectedMember].forEach((task,i)=> {
      const li = document.createElement("li");
      if(task.completed) li.classList.add("completed");
 
@@ -558,7 +595,7 @@ body.dark .member.active {
        const completeBtn = document.createElement("button");
        completeBtn.className="completeBtn";
        completeBtn.textContent="Complete";
-       completeBtn.onclick = async ()=>{
+       completeBtn.onclick = async ()=> {
          task.completed = true;
          await saveTasksForMember(selectedMember);
          renderTasks();
@@ -571,7 +608,7 @@ body.dark .member.active {
      const deleteBtn = document.createElement("button");
      deleteBtn.className="deleteBtn";
      deleteBtn.textContent="Remove";
-     deleteBtn.onclick = async ()=>{
+     deleteBtn.onclick = async ()=> {
        const user = auth.currentUser;
        if (!user) return alert("Admin only");
 
@@ -590,7 +627,7 @@ body.dark .member.active {
  }
 
  // ===== Add Task =====
- addTaskBtn.onclick = async ()=>{
+ addTaskBtn.onclick = async ()=> {
    const user = auth.currentUser;
    if (!user) return alert("Admin only");
 
@@ -626,8 +663,62 @@ body.dark .member.active {
    popup.style.display = "none";
  };
 
+ // ===== Graph render =====
+ async function renderGraph(){
+   const snap = await db.collection("tasks").get();
+   const graphData = {};
+   snap.forEach(d => graphData[d.id] = d.data().tasks || []);
+
+   const total = [];
+   const completed = [];
+   const pending = [];
+
+   members.forEach(m => {
+     const tasks = graphData[m] || [];
+     const totalCount = tasks.length;
+     const completedCount = tasks.filter(t => t.completed).length;
+     const pendingCount = totalCount - completedCount;
+
+     total.push(totalCount);
+     completed.push(completedCount);
+     pending.push(pendingCount);
+   });
+
+   if(chart) chart.destroy();
+
+   chart = new Chart(ctx, {
+     type: "bar",
+     data: {
+       labels: members,
+       datasets: [
+         {
+           label: "Total Tasks",
+           data: total,
+           backgroundColor: "rgba(45,108,223,0.7)"
+         },
+         {
+           label: "Completed",
+           data: completed,
+           backgroundColor: "rgba(46,204,113,0.7)"
+         },
+         {
+           label: "Pending",
+           data: pending,
+           backgroundColor: "rgba(241,196,15,0.7)"
+         }
+       ]
+     },
+     options: {
+       responsive: true,
+       scales: {
+         y: { beginAtZero: true }
+       }
+     }
+   });
+ }
+
  // ===== Select Member =====
- membersDiv.onclick = async e=>{
+ membersDiv.onclick = async e => {
    if(!e.target.closest(".member")) return;
    selectedMember = e.target.closest(".member").dataset.member;
    await loadAllTasks();
