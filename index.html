@@ -497,8 +497,24 @@ body.dark .member.active {
      const info = document.createElement("div");
      info.className = "task-info";
      const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
-     const due = task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "No due date";
-     info.textContent = `Created: ${created} • Due: ${due}`;
+
+     let dueText = "No due date";
+     let dueColor = "#666";
+
+     if (task.dueDate) {
+       const dueDateObj = new Date(task.dueDate);
+       const today = new Date();
+       today.setHours(0,0,0,0);
+
+       dueText = dueDateObj.toLocaleDateString();
+
+       if (!task.completed && dueDateObj < today) {
+         dueColor = "#e74c3c"; // red
+       }
+     }
+
+     info.textContent = `Created: ${created} • Due: ${dueText}`;
+     info.style.color = dueColor;
      row.appendChild(info);
 
      const status = document.createElement("span");
