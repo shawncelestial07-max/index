@@ -7,10 +7,21 @@
 
 <style>
 /* ===== SIMPLE AESTHETIC THEME ===== */
+:root {
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #2c2c2c;
+  --muted: #666;
+  --blue: #2d6cdf;
+  --green: #2ecc71;
+  --red: #e74c3c;
+  --shadow: rgba(0,0,0,0.08);
+}
+
 body {
   font-family: "Inter", Arial, sans-serif;
-  background: #f5f6fa;
-  color: #2c2c2c;
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
   padding: 0;
   display: flex;
@@ -21,7 +32,8 @@ body {
 
 h1, h2 {
   text-align: center;
-  font-weight: 600;
+  font-weight: 700;
+  margin: 12px 0;
 }
 
 /* ===== MEMBERS ===== */
@@ -40,7 +52,7 @@ h1, h2 {
   border-radius: 12px;
   cursor: pointer;
   font-size: 0.9em;
-  background: #ffffff;
+  background: var(--card);
   border: 1px solid #e0e0e0;
   transition: 0.2s ease;
   display: flex;
@@ -53,9 +65,9 @@ h1, h2 {
 }
 
 .member.active {
-  background: #2d6cdf;
+  background: var(--blue);
   color: white;
-  border-color: #2d6cdf;
+  border-color: var(--blue);
 }
 
 /* Small pending count */
@@ -72,32 +84,34 @@ h1, h2 {
 #progress {
   font-size: 0.9em;
   margin-bottom: 10px;
-  color: #555;
+  color: var(--muted);
 }
 
 /* ===== TASK SECTION ===== */
 #taskSection {
   width: 95%;
   max-width: 600px;
-  background: #ffffff;
+  background: var(--card);
   padding: 22px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px var(--shadow);
   margin-bottom: 40px;
 }
 
+/* Fixing input margin to be even */
 #newTaskInput {
   width: 100%;
   padding: 12px;
   margin-bottom: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
+  box-sizing: border-box;
 }
 
 #addTaskBtn {
   width: 100%;
   padding: 12px;
-  background: #2d6cdf;
+  background: var(--blue);
   color: white;
   border: none;
   border-radius: 10px;
@@ -139,7 +153,7 @@ ul#taskList li.completed {
 /* Small date info */
 .task-info {
   font-size: 0.75em;
-  color: #666;
+  color: var(--muted);
   margin-top: 6px;
   width: 100%;
 }
@@ -152,15 +166,22 @@ ul#taskList li.completed {
 }
 
 .status.completed {
-  color: #2e7d32;
+  color: var(--green);
 }
 
 .status.pending {
   color: #f1c40f;
 }
 
+.pastdue {
+  color: var(--red);
+  font-weight: 800;
+  font-size: 0.75em;
+  margin-left: 8px;
+}
+
 button.completeBtn {
-  background: #2ecc71;
+  background: var(--green);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -170,7 +191,7 @@ button.completeBtn {
 }
 
 button.deleteBtn {
-  background: #e74c3c;
+  background: var(--red);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -201,7 +222,7 @@ button.deleteBtn {
   padding: 8px 10px;
   border-radius: 8px;
   border: none;
-  background: #2d6cdf;
+  background: var(--blue);
   color: white;
   cursor: pointer;
   font-size: 12px;
@@ -285,12 +306,12 @@ body.dark .member.active {
 }
 
 #popupOk {
-  background: #2d6cdf;
+  background: var(--blue);
   color: white;
 }
 
 #popupCancel {
-  background: #e74c3c;
+  background: var(--red);
   color: white;
 }
 </style>
@@ -500,6 +521,7 @@ body.dark .member.active {
 
      let dueText = "No due date";
      let dueColor = "#666";
+     let overdueLabel = "";
 
      if (task.dueDate) {
        const dueDateObj = new Date(task.dueDate);
@@ -510,6 +532,7 @@ body.dark .member.active {
 
        if (!task.completed && dueDateObj < today) {
          dueColor = "#e74c3c"; // red
+         overdueLabel = "PAST DUE";
        }
      }
 
@@ -520,7 +543,15 @@ body.dark .member.active {
      const status = document.createElement("span");
      status.className = "status " + (task.completed ? "completed" : "pending");
      status.textContent = task.completed ? "COMPLETED" : "PENDING";
+
      row.appendChild(status);
+
+     if(overdueLabel){
+       const pastDue = document.createElement("span");
+       pastDue.className = "pastdue";
+       pastDue.textContent = overdueLabel;
+       row.appendChild(pastDue);
+     }
 
      // ✔ Anyone can complete (button above Remove)
      if(!task.completed){
