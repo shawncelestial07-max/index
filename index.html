@@ -3,180 +3,101 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ALL IN THE MIND</title>
+<title>Team Task Tracker</title>
 
 <style>
-/* ===== SIMPLE AESTHETIC THEME ===== */
+:root {
+  --bg: #f5f6fa;
+  --card: #ffffff;
+  --text: #2c2c2c;
+  --primary: #2d6cdf;
+}
+
+body.dark {
+  --bg: #121212;
+  --card: #1e1e1e;
+  --text: #f1f1f1;
+}
+
 body {
-  font-family: "Inter", Arial, sans-serif;
-  background: #f5f6fa;
-  color: #2c2c2c;
+  font-family: Inter, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
+  transition: 0.3s;
 }
 
-h1, h2 {
-  text-align: center;
-  font-weight: 600;
+h1 { margin: 20px 0 10px; }
+
+/* ===== DARK MODE ===== */
+#darkToggle {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  font-size: 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 /* ===== MEMBERS ===== */
 #members {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  margin: 15px 0;
-  width: 90%;
-  max-width: 520px;
+  margin-bottom: 10px;
 }
 
 .member {
-  padding: 10px 16px;
+  background: var(--card);
+  padding: 10px 14px;
   border-radius: 12px;
   cursor: pointer;
-  font-size: 0.9em;
-  background: #ffffff;
-  border: 1px solid #e0e0e0;
-  transition: 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.member:hover {
-  transform: translateY(-2px);
 }
 
 .member.active {
-  background: #2d6cdf;
+  background: var(--primary);
   color: white;
-  border-color: #2d6cdf;
-}
-
-/* Small pending count */
-.badge {
-  font-size: 0.7em;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background: #f1c40f;
-  color: #333;
-  font-weight: 600;
-}
-
-/* ===== PROGRESS ===== */
-#progress {
-  font-size: 0.9em;
-  margin-bottom: 10px;
-  color: #555;
 }
 
 /* ===== TASK SECTION ===== */
 #taskSection {
   width: 95%;
   max-width: 600px;
-  background: #ffffff;
-  padding: 22px;
+  background: var(--card);
+  padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
   margin-bottom: 40px;
 }
 
-#newTaskInput {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-}
-
-#addTaskBtn {
-  width: 100%;
-  padding: 12px;
-  background: #2d6cdf;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-/* ===== TASK LIST ===== */
-ul#taskList {
+ul {
   list-style: none;
   padding: 0;
-  margin-top: 15px;
 }
 
-ul#taskList li {
-  padding: 14px;
-  background: #f9f9f9;
-  border-radius: 12px;
+li {
+  background: #eee;
+  padding: 12px;
+  border-radius: 10px;
   margin-bottom: 10px;
-  border: 1px solid #eee;
 }
 
-ul#taskList li.completed {
-  background: #e9f7ef;
-  color: #2e7d32;
+body.dark li {
+  background: #2a2a2a;
 }
 
-.task-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.task-text {
-  flex-grow: 1;
-  margin-right: 10px;
-}
-
-/* Status labels */
-.status {
-  font-size: 0.75em;
-  font-weight: 700;
-  margin-right: 10px;
-}
-
-.status.completed {
-  color: #2e7d32;
-}
-
-.status.pending {
-  color: #f1c40f;
-}
-
-button.completeBtn {
-  background: #2ecc71;
+button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary);
   color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-button.deleteBtn {
-  background: #e74c3c;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-/* ===== DARK TOGGLE ===== */
-#darkToggle {
-  position: fixed;
-  top: 14px;
-  right: 14px;
-  background: none;
-  border: none;
-  font-size: 18px;
   cursor: pointer;
 }
 </style>
@@ -185,159 +106,88 @@ button.deleteBtn {
 <body>
 
 <button id="darkToggle">🌙</button>
-
 <h1>Team Task Tracker</h1>
 
-<div id="members">
-  <div class="member" data-member="Meca">Meca</div>
-  <div class="member" data-member="Johny">Johny</div>
-  <div class="member" data-member="Jerome">Jerome</div>
-  <div class="member" data-member="Carl">Carl</div>
-  <div class="member" data-member="Shawn">Shawn</div>
-  <div class="member" data-member="Jomar">Jomar</div>
-  <div class="member" data-member="Yvone">Yvone</div>
-</div>
-
-<div id="progress"></div>
+<div id="members"></div>
 
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
-  <input type="text" id="newTaskInput" placeholder="Enter new task..." />
-  <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
-
 <script>
-// ===== Firebase =====
-firebase.initializeApp({
-  apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
-  authDomain: "teamtasktracker-d2c06.firebaseapp.com",
-  projectId: "teamtasktracker-d2c06"
-});
-const db = firebase.firestore();
+/* ===== CONFIG ===== */
+const FORM_LINK = "YOUR_GOOGLE_FORM_LINK_HERE";
 
-// ===== Variables =====
-let selectedMember = null;
-let data = {};
+/* ===== DATA (VIEW ONLY) ===== */
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar","Yvone"];
 
+// Sample tasks (you can hardcode or sync manually)
+const tasks = {
+  Meca: ["Design banner", "Fix homepage"],
+  Johny: ["Write content"],
+  Yvone: ["QA testing"]
+};
+
+let selectedMember = null;
+
+/* ===== DARK MODE FIXED ===== */
+const toggle = document.getElementById("darkToggle");
+if (localStorage.getItem("dark") === "true") {
+  document.body.classList.add("dark");
+  toggle.textContent = "☀️";
+}
+
+toggle.onclick = () => {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("dark", document.body.classList.contains("dark"));
+  toggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+};
+
+/* ===== RENDER MEMBERS ===== */
 const membersDiv = document.getElementById("members");
+
+members.forEach(m => {
+  const div = document.createElement("div");
+  div.className = "member";
+  div.textContent = m;
+  div.onclick = () => {
+    selectedMember = m;
+    document.querySelectorAll(".member").forEach(x => x.classList.remove("active"));
+    div.classList.add("active");
+    renderTasks();
+  };
+  membersDiv.appendChild(div);
+});
+
+/* ===== TASKS ===== */
 const taskSection = document.getElementById("taskSection");
-const memberTitle = document.getElementById("memberTitle");
-const newTaskInput = document.getElementById("newTaskInput");
-const addTaskBtn = document.getElementById("addTaskBtn");
 const taskList = document.getElementById("taskList");
-const progressDiv = document.getElementById("progress");
+const title = document.getElementById("memberTitle");
 
-// ===== Load / Save =====
-async function loadAllTasks(){
-  const snap = await db.collection("tasks").get();
-  data = {};
-  snap.forEach(d => data[d.id] = d.data().tasks || []);
-  members.forEach(m => { if(!data[m]) data[m] = []; });
-  renderMembers();
-}
-
-async function saveTasksForMember(member){
-  await db.collection("tasks").doc(member).set({ tasks: data[member] });
-  renderMembers();
-}
-
-// ===== Render Members (with pending count) =====
-function renderMembers(){
-  [...membersDiv.children].forEach(div => {
-    const name = div.dataset.member;
-    div.classList.toggle("active", name === selectedMember);
-
-    const pending = data[name]?.filter(t => !t.completed).length || 0;
-    div.innerHTML = name + (pending ? ` <span class="badge">${pending}</span>` : "");
-  });
-}
-
-// ===== Progress =====
-function renderProgress(){
-  if(!selectedMember) return progressDiv.textContent="";
-  const total = data[selectedMember].length;
-  const completed = data[selectedMember].filter(t=>t.completed).length;
-  const percent = total ? Math.round(completed/total*100) : 0;
-  progressDiv.textContent = `Progress: ${completed}/${total} (${percent}%)`;
-}
-
-// ===== Render Tasks =====
-function renderTasks(){
+function renderTasks() {
+  taskSection.style.display = "block";
+  title.textContent = selectedMember + "'s Tasks";
   taskList.innerHTML = "";
-  if(!selectedMember) return taskSection.style.display="none";
-  taskSection.style.display="block";
-  memberTitle.textContent = selectedMember + "'s Tasks";
-  renderProgress();
 
-  data[selectedMember].forEach((task,i)=>{
+  (tasks[selectedMember] || []).forEach(task => {
     const li = document.createElement("li");
-    if(task.completed) li.classList.add("completed");
-
-    const row = document.createElement("div");
-    row.className = "task-row";
-
-    const text = document.createElement("span");
-    text.className = "task-text";
-    text.textContent = task.text;
-    row.appendChild(text);
-
-    const status = document.createElement("span");
-    status.className = "status " + (task.completed ? "completed" : "pending");
-    status.textContent = task.completed ? "COMPLETED" : "PENDING";
-    row.appendChild(status);
-
-    if(!task.completed){
-      const completeBtn = document.createElement("button");
-      completeBtn.className="completeBtn";
-      completeBtn.textContent="Complete";
-      completeBtn.onclick = async ()=>{
-        task.completed = true;
-        await saveTasksForMember(selectedMember);
-        renderTasks();
-        confetti();
-      };
-      row.appendChild(completeBtn);
-    }
-
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className="deleteBtn";
-    deleteBtn.textContent="Remove";
-    deleteBtn.onclick = async ()=>{
-      data[selectedMember].splice(i,1);
-      await saveTasksForMember(selectedMember);
-      renderTasks();
-    };
-
-    row.appendChild(deleteBtn);
-    li.appendChild(row);
+    li.innerHTML = `
+      ${task}
+      <br><br>
+      <button onclick="openForm('${selectedMember}','${task}')">
+        Mark Completed
+      </button>
+    `;
     taskList.appendChild(li);
   });
 }
 
-// ===== Add Task =====
-addTaskBtn.onclick = async ()=>{
-  if(!newTaskInput.value.trim()) return;
-  data[selectedMember].push({ text:newTaskInput.value, completed:false });
-  newTaskInput.value="";
-  await saveTasksForMember(selectedMember);
-  renderTasks();
-};
-
-// ===== Select Member =====
-membersDiv.onclick = async e=>{
-  if(!e.target.closest(".member")) return;
-  selectedMember = e.target.closest(".member").dataset.member;
-  await loadAllTasks();
-  renderTasks();
-};
-
-window.onload = loadAllTasks;
+/* ===== FORM SUBMISSION ===== */
+function openForm(member, task) {
+  const url = `${FORM_LINK}&entry.123456=${member}&entry.654321=${task}`;
+  window.open(url, "_blank");
+}
 </script>
 
 </body>
