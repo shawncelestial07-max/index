@@ -24,48 +24,6 @@ h1, h2 {
   font-weight: 600;
 }
 
-/* ===== LOGIN SECTION ===== */
-#loginSection {
-  margin-top: 10px;
-  width: 90%;
-  max-width: 520px;
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  align-items: center;
-}
-
-#loginSection .label {
-  font-weight: 700;
-  font-size: 0.85em;
-  color: #555;
-}
-
-#loginSection input {
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  width: 140px;
-  font-size: 0.85em;
-}
-
-#loginSection button {
-  padding: 8px 10px;
-  border-radius: 8px;
-  border: none;
-  background: #2d6cdf;
-  color: white;
-  cursor: pointer;
-  font-size: 0.85em;
-}
-
-#logoutBtn {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  display: none;
-}
-
 /* ===== MEMBERS ===== */
 #members {
   display: flex;
@@ -211,7 +169,36 @@ button.deleteBtn {
   cursor: pointer;
 }
 
-/* ===== DARK TOGGLE ===== */
+/* ===== LOGIN SECTION ===== */
+#loginSection {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#loginSection input {
+  padding: 8px;
+  width: 130px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+}
+
+#loginSection button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: none;
+  background: #2d6cdf;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* ===== DARK MODE ===== */
 #darkToggle {
   position: fixed;
   top: 14px;
@@ -258,14 +245,6 @@ body.dark .member.active {
 
 <h1>Team Task Tracker</h1>
 
-<div id="loginSection">
-  <div class="label">ADMIN</div>
-  <input id="email" type="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
-  <button id="logoutBtn">Logout</button>
-</div>
-
 <div id="members">
   <div class="member" data-member="Meca">Meca</div>
   <div class="member" data-member="Johny">Johny</div>
@@ -284,6 +263,14 @@ body.dark .member.active {
   <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
+
+<div id="loginSection">
+  <span style="font-size:12px; font-weight:700;">ADMIN</span>
+  <input id="email" type="email" placeholder="Email" />
+  <input id="password" type="password" placeholder="Password" />
+  <button id="loginBtn">Login</button>
+  <button id="logoutBtn" style="display:none;">Logout</button>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -317,8 +304,6 @@ body.dark .member.active {
  const passInput = document.getElementById("password");
  const loginBtn = document.getElementById("loginBtn");
  const logoutBtn = document.getElementById("logoutBtn");
-
- let isAdmin = false;
 
  // ===== Dark Mode Toggle (FIXED) =====
  const darkToggle = document.getElementById("darkToggle");
@@ -354,27 +339,25 @@ body.dark .member.active {
  // ===== Auth State =====
  auth.onAuthStateChanged(async user => {
    if (!user) {
-     isAdmin = false;
      addTaskBtn.disabled = true;
      logoutBtn.style.display = "none";
      loginBtn.style.display = "block";
-     emailInput.style.display = "block";
-     passInput.style.display = "block";
-     document.querySelector(".label").style.display = "block";
+     emailInput.style.display = "inline-block";
+     passInput.style.display = "inline-block";
      return;
    }
 
-   logoutBtn.style.display = "block";
+   const token = await user.getIdTokenResult();
+   const isAdmin = token.claims.admin;
+
+   // admin sees add/remove
+   addTaskBtn.disabled = !isAdmin;
+
+   // hide login if signed in
    loginBtn.style.display = "none";
    emailInput.style.display = "none";
    passInput.style.display = "none";
-   document.querySelector(".label").style.display = "none";
-
-   const token = await user.getIdTokenResult();
-   isAdmin = !!token.claims.admin;
-
-   // Only admin can add/delete tasks
-   addTaskBtn.disabled = !isAdmin;
+   logoutBtn.style.display = "inline-block";
  });
 
  // ===== Load / Save =====
@@ -436,7 +419,7 @@ body.dark .member.active {
      status.textContent = task.completed ? "COMPLETED" : "PENDING";
      row.appendChild(status);
 
-     // ANY MEMBER can mark as complete
+     // ✔ Everyone can mark completed
      if(!task.completed){
        const completeBtn = document.createElement("button");
        completeBtn.className="completeBtn";
@@ -450,19 +433,23 @@ body.dark .member.active {
        row.appendChild(completeBtn);
      }
 
-     // Only admin can delete
-     if(isAdmin){
-       const deleteBtn = document.createElement("button");
-       deleteBtn.className="deleteBtn";
-       deleteBtn.textContent="Remove";
-       deleteBtn.onclick = async ()=>{
-         data[selectedMember].splice(i,1);
-         await saveTasksForMember(selectedMember);
-         renderTasks();
-       };
-       row.appendChild(deleteBtn);
-     }
+     // ❌ ONLY ADMIN can delete
+     const deleteBtn = document.createElement("button");
+     deleteBtn.className="deleteBtn";
+     deleteBtn.textContent="Remove";
+     deleteBtn.onclick = async ()=>{
+       const user = auth.currentUser;
+       if (!user) return alert("Admin only");
 
+       const token = await user.getIdTokenResult();
+       if (!token.claims.admin) return alert("Admin only");
+
+       data[selectedMember].splice(i,1);
+       await saveTasksForMember(selectedMember);
+       renderTasks();
+     };
+
+     row.appendChild(deleteBtn);
      li.appendChild(row);
      taskList.appendChild(li);
    });
@@ -470,6 +457,12 @@ body.dark .member.active {
 
  // ===== Add Task =====
  addTaskBtn.onclick = async ()=>{
+   const user = auth.currentUser;
+   if (!user) return alert("Admin only");
+
+   const token = await user.getIdTokenResult();
+   if (!token.claims.admin) return alert("Admin only");
+
    if(!newTaskInput.value.trim()) return;
    data[selectedMember].push({ text:newTaskInput.value, completed:false });
    newTaskInput.value="";
