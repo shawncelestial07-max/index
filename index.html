@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ALL IN THE MIND</title>
+<title>TASK TRACKER</title>
 
 <style>
 /* ===== SIMPLE AESTHETIC THEME ===== */
@@ -94,12 +94,27 @@ h1, h2 {
   border: 1px solid #ddd;
 }
 
-#dueDateInput {
-  width: 100%;
-  padding: 12px;
+#scheduleWrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 10px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
+}
+
+#scheduleLabel {
+  font-size: 0.85em;
+  color: #666;
+}
+
+#calendarIcon {
+  cursor: pointer;
+  font-size: 18px;
+}
+
+#dueDateInput {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #addTaskBtn {
@@ -242,7 +257,12 @@ body.dark ul#taskList li {
   border-color: #333;
 }
 
-body.dark #newTaskInput,
+body.dark #newTaskInput {
+  background: #2a2a2a;
+  color: #f1f1f1;
+  border-color: #444;
+}
+
 body.dark #dueDateInput {
   background: #2a2a2a;
   color: #f1f1f1;
@@ -260,7 +280,7 @@ body.dark .member.active {
 
 <button id="darkToggle">🌙</button>
 
-<h1>Team Task Tracker</h1>
+<h1>TASK TRACKER</h1>
 
 <div id="members">
   <div class="member" data-member="Meca">Meca</div>
@@ -277,7 +297,13 @@ body.dark .member.active {
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
   <input type="text" id="newTaskInput" placeholder="Enter new task..." />
-  <input type="date" id="dueDateInput" />
+
+  <div id="scheduleWrap">
+    <span id="scheduleLabel">Add schedule</span>
+    <span id="calendarIcon">📅</span>
+    <input type="date" id="dueDateInput" />
+  </div>
+
   <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
@@ -324,6 +350,8 @@ body.dark .member.active {
  const loginBtn = document.getElementById("loginBtn");
  const logoutBtn = document.getElementById("logoutBtn");
 
+ const calendarIcon = document.getElementById("calendarIcon");
+
  // ===== Dark Mode Toggle (FIXED) =====
  const darkToggle = document.getElementById("darkToggle");
 
@@ -337,6 +365,11 @@ body.dark .member.active {
    const isDark = document.body.classList.contains("dark");
    localStorage.setItem("darkMode", isDark);
    darkToggle.textContent = isDark ? "☀️" : "🌙";
+ };
+
+ // ===== Calendar Icon Click =====
+ calendarIcon.onclick = () => {
+  dueDateInput.click();
  };
 
  // ===== Auth Login =====
