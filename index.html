@@ -94,30 +94,6 @@ h1, h2 {
   border: 1px solid #ddd;
 }
 
-#scheduleWrap {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-#scheduleLabel {
-  font-size: 0.85em;
-  color: #666;
-}
-
-#calendarIcon {
-  cursor: pointer;
-  font-size: 18px;
-}
-
-#dueDateInput {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-}
-
 #addTaskBtn {
   width: 100%;
   padding: 12px;
@@ -265,14 +241,56 @@ body.dark #newTaskInput {
   border-color: #444;
 }
 
-body.dark #dueDateInput {
-  background: #2a2a2a;
-  color: #f1f1f1;
-  border-color: #444;
-}
-
 body.dark .member.active {
   background: #2d6cdf;
+  color: white;
+}
+
+/* ===== POPUP ===== */
+#popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+}
+
+#popupBox {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+}
+
+#popupBox input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-top: 10px;
+}
+
+#popupBox button {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#popupOk {
+  background: #2d6cdf;
+  color: white;
+}
+
+#popupCancel {
+  background: #e74c3c;
   color: white;
 }
 </style>
@@ -299,16 +317,18 @@ body.dark .member.active {
 <section id="taskSection" style="display:none;">
   <h2 id="memberTitle"></h2>
   <input type="text" id="newTaskInput" placeholder="Enter new task..." />
-
-  <div id="scheduleWrap">
-    <span id="scheduleLabel">Add schedule</span>
-    <span id="calendarIcon">📅</span>
-    <input type="date" id="dueDateInput" />
-  </div>
-
   <button id="addTaskBtn">Add Task</button>
   <ul id="taskList"></ul>
 </section>
+
+<div id="popup">
+  <div id="popupBox">
+    <div style="font-weight:700; font-size:16px;">Set Schedule</div>
+    <input type="date" id="popupDate" />
+    <button id="popupOk">Save</button>
+    <button id="popupCancel">Cancel</button>
+  </div>
+</div>
 
 <div id="loginSection">
   <span style="font-size:12px; font-weight:700;">ADMIN</span>
@@ -342,17 +362,20 @@ body.dark .member.active {
  const taskSection = document.getElementById("taskSection");
  const memberTitle = document.getElementById("memberTitle");
  const newTaskInput = document.getElementById("newTaskInput");
- const dueDateInput = document.getElementById("dueDateInput");
  const addTaskBtn = document.getElementById("addTaskBtn");
  const taskList = document.getElementById("taskList");
  const progressDiv = document.getElementById("progress");
+
+ // Popup
+ const popup = document.getElementById("popup");
+ const popupDate = document.getElementById("popupDate");
+ const popupOk = document.getElementById("popupOk");
+ const popupCancel = document.getElementById("popupCancel");
 
  const emailInput = document.getElementById("email");
  const passInput = document.getElementById("password");
  const loginBtn = document.getElementById("loginBtn");
  const logoutBtn = document.getElementById("logoutBtn");
-
- const calendarIcon = document.getElementById("calendarIcon");
 
  // ===== Dark Mode Toggle (FIXED) =====
  const darkToggle = document.getElementById("darkToggle");
@@ -367,11 +390,6 @@ body.dark .member.active {
    const isDark = document.body.classList.contains("dark");
    localStorage.setItem("darkMode", isDark);
    darkToggle.textContent = isDark ? "☀️" : "🌙";
- };
-
- // ===== Calendar Icon Click =====
- calendarIcon.onclick = () => {
-  dueDateInput.click();
  };
 
  // ===== Auth Login =====
@@ -534,17 +552,31 @@ body.dark .member.active {
 
    if(!newTaskInput.value.trim()) return;
 
+   // open popup for due date
+   popup.style.display = "flex";
+ };
+
+ // ===== Popup actions =====
+ popupOk.onclick = async () => {
+   const dueDate = popupDate.value;
+
    data[selectedMember].push({
      text: newTaskInput.value,
      completed: false,
      createdAt: Date.now(),
-     dueDate: dueDateInput.value
+     dueDate: dueDate
    });
 
    newTaskInput.value = "";
-   dueDateInput.value = "";
+   popupDate.value = "";
+   popup.style.display = "none";
+
    await saveTasksForMember(selectedMember);
    renderTasks();
+ };
+
+ popupCancel.onclick = () => {
+   popup.style.display = "none";
  };
 
  // ===== Select Member =====
