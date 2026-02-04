@@ -10,57 +10,102 @@
   --bg:#f4f6fb;
   --card:#fff;
   --text:#2c2c2c;
-  --muted:#666;
+  --muted:#6c6c6c;
   --blue:#2d6cdf;
   --green:#2ecc71;
   --red:#e74c3c;
   --shadow:rgba(0,0,0,0.08);
+  --shadow2:rgba(0,0,0,0.12);
 }
 
+*{box-sizing:border-box;}
 body{
   font-family:"Inter", Arial, sans-serif;
   background:var(--bg);
   color:var(--text);
   margin:0;
-  padding:0;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
   min-height:100vh;
 }
 
-h1,h2{
-  text-align:center;
-  font-weight:700;
-  margin:12px 0;
+/* ===== Layout ===== */
+.page{
+  display:grid;
+  grid-template-rows: auto 1fr auto;
+  min-height:100vh;
 }
 
-/* Members */
-#members{
+.header{
   display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 24px;
+  background:var(--card);
+  border-bottom:1px solid #eee;
+  box-shadow:0 2px 10px var(--shadow);
+}
+
+.header .title{
+  font-weight:800;
+  letter-spacing:0.5px;
+}
+
+.header .controls{
+  display:flex;
+  align-items:center;
   gap:10px;
-  margin:15px 0;
-  width:90%;
-  max-width:520px;
+}
+
+#darkToggle{
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.container{
+  display:grid;
+  grid-template-columns: 280px 1fr;
+  gap:18px;
+  padding:20px 24px;
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  background:var(--card);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 10px 25px var(--shadow);
+}
+
+.sidebar h2{
+  margin:0 0 12px 0;
+  font-size:16px;
+  font-weight:700;
 }
 
 .member{
-  padding:10px 16px;
-  border-radius:12px;
-  cursor:pointer;
-  font-size:0.9em;
-  background:var(--card);
-  border:1px solid #e0e0e0;
-  transition:0.2s ease;
   display:flex;
+  justify-content:space-between;
   align-items:center;
-  gap:6px;
+  padding:10px 12px;
+  margin:8px 0;
+  border-radius:12px;
+  background:#fafafa;
+  border:1px solid #eee;
+  cursor:pointer;
+  transition:0.2s ease;
 }
 
-.member:hover{transform:translateY(-2px);}
-.member.active{background:var(--blue); color:#fff; border-color:var(--blue);}
+.member:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px var(--shadow);
+}
+
+.member.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
 
 .badge{
   font-size:0.7em;
@@ -71,90 +116,106 @@ h1,h2{
   font-weight:600;
 }
 
-/* Progress */
-#progress{
-  font-size:0.9em;
-  margin-bottom:10px;
-  color:var(--muted);
+/* ===== Main Content ===== */
+.main{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
 }
 
-/* Task section */
-#taskSection{
-  width:95%;
-  max-width:600px;
+.card{
   background:var(--card);
-  padding:22px;
   border-radius:16px;
+  padding:18px;
   box-shadow:0 10px 25px var(--shadow);
-  margin-bottom:20px;
 }
 
+.card h2{
+  margin:0 0 12px 0;
+  font-size:18px;
+  font-weight:800;
+}
+
+#progress{
+  color:var(--muted);
+  font-size:0.9em;
+}
+
+/* Task input */
 #newTaskInput{
   width:100%;
   padding:12px;
-  margin-bottom:10px;
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid #ddd;
-  box-sizing:border-box;
+  margin-bottom:10px;
+  outline:none;
+  transition:0.2s ease;
+}
+
+#newTaskInput:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(45,108,223,0.12);
 }
 
 #addTaskBtn{
   width:100%;
   padding:12px;
+  border-radius:12px;
+  border:none;
   background:var(--blue);
   color:#fff;
-  border:none;
-  border-radius:10px;
+  font-weight:700;
   cursor:pointer;
+  transition:0.2s ease;
+}
+
+#addTaskBtn:hover{
+  background:#265fb8;
 }
 
 /* Task list */
 ul#taskList{
   list-style:none;
   padding:0;
-  margin-top:15px;
+  margin:14px 0 0 0;
 }
 
 ul#taskList li{
-  padding:14px;
-  background:#f9f9f9;
-  border-radius:12px;
-  margin-bottom:10px;
+  background:#fafafa;
   border:1px solid #eee;
-}
-
-ul#taskList li.completed{
-  background:#e9f7ef;
-  color:#2e7d32;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:10px;
 }
 
 .task-row{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  gap:10px;
   flex-wrap:wrap;
 }
 
 .task-text{
-  flex-grow:1;
-  margin-right:10px;
+  flex:1;
+  font-weight:600;
 }
 
 .task-info{
   font-size:0.75em;
   color:var(--muted);
   margin-top:6px;
-  width:100%;
 }
 
 .status{
   font-size:0.75em;
   font-weight:700;
-  margin-right:10px;
+  padding:4px 8px;
+  border-radius:10px;
 }
 
-.status.completed{color:var(--green);}
-.status.pending{color:#f1c40f;}
+.status.completed{background:rgba(46,204,113,0.15); color:var(--green);}
+.status.pending{background:rgba(241,196,15,0.15); color:#f1c40f;}
 
 .pastdue{
   color:var(--red);
@@ -163,244 +224,180 @@ ul#taskList li.completed{
   margin-left:8px;
 }
 
-button.completeBtn{
+.btnRow{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+button.smallBtn{
+  border:none;
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.completeBtn{
   background:var(--green);
   color:#fff;
-  border:none;
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
-  margin-right:8px;
 }
 
-button.deleteBtn{
+.deleteBtn{
   background:var(--red);
   color:#fff;
-  border:none;
-  padding:8px 12px;
-  border-radius:8px;
-  cursor:pointer;
 }
-
-/* Login */
-#loginSection{
-  position:fixed;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  display:flex;
-  gap:6px;
-  align-items:center;
-}
-
-#loginSection input{
-  padding:8px;
-  width:130px;
-  border-radius:8px;
-  border:1px solid #ddd;
-  font-size:12px;
-}
-
-#loginSection button{
-  padding:8px 10px;
-  border-radius:8px;
-  border:none;
-  background:var(--blue);
-  color:#fff;
-  cursor:pointer;
-  font-size:12px;
-}
-
-/* Dark mode */
-#darkToggle{
-  position:fixed;
-  top:14px;
-  right:14px;
-  background:none;
-  border:none;
-  font-size:18px;
-  cursor:pointer;
-}
-
-body.dark{
-  background:#121212;
-  color:#f1f1f1;
-}
-
-body.dark #taskSection,
-body.dark .member,
-body.dark #chartBox{
-  background:#1e1e1e;
-  border-color:#333;
-}
-
-body.dark ul#taskList li{
-  background:#2a2a2a;
-  border-color:#333;
-}
-
-body.dark #newTaskInput{
-  background:#2a2a2a;
-  color:#f1f1f1;
-  border-color:#444;
-}
-
-body.dark .member.active{
-  background:#2d6cdf;
-  color:white;
-}
-
-/* Popup */
-#popup{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.5);
-  display:none;
-  justify-content:center;
-  align-items:center;
-}
-
-#popupBox{
-  background:#fff;
-  padding:20px;
-  border-radius:14px;
-  width:90%;
-  max-width:360px;
-  text-align:center;
-}
-
-#popupBox input{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ddd;
-  margin-top:10px;
-}
-
-#popupBox button{
-  margin-top:12px;
-  padding:10px 16px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-}
-
-#popupOk{background:var(--blue); color:#fff;}
-#popupCancel{background:var(--red); color:#fff;}
 
 /* Chart */
 #chartBox{
-  width:95%;
-  max-width:700px;
-  background:var(--card);
-  padding:20px;
-  border-radius:16px;
-  box-shadow:0 10px 25px var(--shadow);
-  margin-bottom:40px;
+  padding:18px;
 }
 
-/* Performance labels */
 .performance{
   display:flex;
-  justify-content:space-between;
-  gap:10px;
-  margin-top:15px;
+  gap:12px;
+  margin-top:12px;
 }
 
-.performance div{
+.performance .item{
   flex:1;
-  background:#fff;
-  padding:12px;
-  border-radius:12px;
+  background:#fafafa;
   border:1px solid #eee;
+  border-radius:14px;
+  padding:12px;
   text-align:center;
 }
 
-.performance div strong{
+.performance .item strong{
   display:block;
   font-size:18px;
   margin-top:6px;
 }
 
-.performance div span{
-  display:block;
+.performance .item span{
+  color:var(--muted);
   font-size:12px;
-  color:#666;
-  margin-top:4px;
 }
 
-/* Responsive */
-@media (max-width: 600px){
-  #taskSection, #chartBox{
-    padding:16px;
-  }
-  .member{
-    font-size:0.85em;
-    padding:8px 12px;
-  }
-  #newTaskInput{
-    padding:10px;
-  }
-  .performance{
-    flex-direction:column;
-  }
+/* Login */
+#loginSection{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:16px 24px;
+  background:var(--card);
+  border-top:1px solid #eee;
+}
+
+#loginSection input{
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  width:150px;
+}
+
+#loginSection button{
+  padding:10px 12px;
+  border-radius:12px;
+  border:none;
+  background:var(--blue);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+}
+
+/* Dark mode */
+body.dark{
+  background:#121212;
+  color:#f1f1f1;
+}
+
+body.dark .card,
+body.dark .sidebar,
+body.dark #loginSection,
+body.dark #header{
+  background:#1e1e1e;
+  border-color:#333;
+}
+
+body.dark .member{background:#2a2a2a; border-color:#333;}
+body.dark ul#taskList li{background:#2a2a2a; border-color:#333;}
+body.dark #newTaskInput{background:#2a2a2a; color:#f1f1f1; border-color:#444;}
+body.dark .performance .item{background:#2a2a2a; border-color:#333;}
+body.dark .status.completed{background:rgba(46,204,113,0.2);}
+body.dark .status.pending{background:rgba(241,196,15,0.2);}
+
+@media (max-width: 860px){
+  .container{grid-template-columns: 1fr;}
+  .sidebar{order:2;}
+  .main{order:1;}
 }
 </style>
 </head>
 
 <body>
+<div class="page">
 
-<button id="darkToggle">🌙</button>
+  <header class="header">
+    <div class="title">TASK TRACKER</div>
+    <div class="controls">
+      <button id="darkToggle">🌙</button>
+    </div>
+  </header>
 
-<h1>TASK TRACKER</h1>
+  <main class="container">
+    <aside class="sidebar">
+      <h2>Members</h2>
+      <div id="members"></div>
+    </aside>
 
-<div id="members"></div>
+    <section class="main">
+      <div class="card">
+        <h2 id="memberTitle">Select a member</h2>
+        <div id="progress"></div>
+        <input type="text" id="newTaskInput" placeholder="Enter new task..." />
+        <button id="addTaskBtn">Add Task</button>
+        <ul id="taskList"></ul>
+      </div>
 
-<div id="progress"></div>
+      <div class="card" id="chartBox">
+        <canvas id="chart"></canvas>
+        <div class="performance">
+          <div class="item">
+            <span>Top Performer</span>
+            <strong id="topPerformer">-</strong>
+          </div>
+          <div class="item">
+            <span>Most Completed</span>
+            <strong id="mostCompleted">-</strong>
+          </div>
+          <div class="item">
+            <span>Most Overdue</span>
+            <strong id="mostOverdue">-</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-<section id="taskSection" style="display:none;">
-  <h2 id="memberTitle"></h2>
-  <input type="text" id="newTaskInput" placeholder="Enter new task..." />
-  <button id="addTaskBtn">Add Task</button>
-  <ul id="taskList"></ul>
-</section>
+  <footer id="loginSection">
+    <span style="font-weight:700;">ADMIN</span>
+    <input id="email" type="email" placeholder="Email" />
+    <input id="password" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+    <button id="logoutBtn" style="display:none;">Logout</button>
+  </footer>
 
-<div id="popup">
+</div>
+
+<!-- POPUP -->
+<div id="popup" style="display:none;">
   <div id="popupBox">
     <div style="font-weight:700; font-size:16px;">Set Schedule</div>
     <input type="date" id="popupDate" />
     <button id="popupOk">Save</button>
     <button id="popupCancel">Cancel</button>
   </div>
-</div>
-
-<div id="chartBox">
-  <canvas id="chart"></canvas>
-  <div class="performance">
-    <div id="topPerformer">
-      <span>Top Performer</span>
-      <strong>-</strong>
-    </div>
-    <div id="mostCompleted">
-      <span>Most Completed</span>
-      <strong>-</strong>
-    </div>
-    <div id="mostOverdue">
-      <span>Most Overdue</span>
-      <strong>-</strong>
-    </div>
-  </div>
-</div>
-
-<div id="loginSection">
-  <span style="font-size:12px; font-weight:700;">ADMIN</span>
-  <input id="email" type="email" placeholder="Email" />
-  <input id="password" type="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
-  <button id="logoutBtn" style="display:none;">Logout</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -425,7 +422,6 @@ let chart = null;
 
 // DOM
 const membersDiv = document.getElementById("members");
-const taskSection = document.getElementById("taskSection");
 const memberTitle = document.getElementById("memberTitle");
 const newTaskInput = document.getElementById("newTaskInput");
 const addTaskBtn = document.getElementById("addTaskBtn");
@@ -444,7 +440,7 @@ const logoutBtn = document.getElementById("logoutBtn");
 
 const darkToggle = document.getElementById("darkToggle");
 
-// Dark mode (FIXED)
+// Dark mode
 const darkModeEnabled = localStorage.getItem("darkMode") === "true";
 if (darkModeEnabled) {
   document.body.classList.add("dark");
@@ -455,7 +451,7 @@ darkToggle.onclick = () => {
   const isDark = document.body.classList.contains("dark");
   localStorage.setItem("darkMode", isDark);
   darkToggle.textContent = isDark ? "☀️" : "🌙";
-}
+};
 
 // Auth
 loginBtn.onclick = () => {
@@ -539,14 +535,12 @@ function renderProgress(){
 // Render tasks
 function renderTasks(){
   taskList.innerHTML = "";
-  if(!selectedMember) return taskSection.style.display="none";
-  taskSection.style.display="block";
+  if(!selectedMember) return memberTitle.textContent="Select a member";
   memberTitle.textContent = selectedMember + "'s Tasks";
   renderProgress();
 
   data[selectedMember].forEach((task,i)=>{
     const li = document.createElement("li");
-    if(task.completed) li.classList.add("completed");
 
     const row = document.createElement("div");
     row.className = "task-row";
@@ -559,6 +553,7 @@ function renderTasks(){
     const info = document.createElement("div");
     info.className = "task-info";
     const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
+
     let dueText = "No due date";
     let dueColor = "#666";
     let overdueLabel = "";
@@ -590,28 +585,32 @@ function renderTasks(){
       row.appendChild(pastDue);
     }
 
+    const btnRow = document.createElement("div");
+    btnRow.className = "btnRow";
+
     if(!task.completed){
       const completeBtn = document.createElement("button");
-      completeBtn.className="completeBtn";
+      completeBtn.className="smallBtn completeBtn";
       completeBtn.textContent="Complete";
       completeBtn.onclick = async ()=>{
         task.completed = true;
         await saveTasks();
         confetti();
       };
-      row.appendChild(completeBtn);
+      btnRow.appendChild(completeBtn);
     }
 
     const deleteBtn = document.createElement("button");
-    deleteBtn.className="deleteBtn";
+    deleteBtn.className="smallBtn deleteBtn";
     deleteBtn.textContent="Remove";
     deleteBtn.onclick = async ()=>{
       if(!isAdmin) return alert("Admin only");
       data[selectedMember].splice(i,1);
       await saveTasks();
     };
-    row.appendChild(deleteBtn);
+    btnRow.appendChild(deleteBtn);
 
+    row.appendChild(btnRow);
     li.appendChild(row);
     taskList.appendChild(li);
   });
@@ -659,7 +658,6 @@ function renderChart(){
     completed.push(tasks.filter(t=>t.completed).length);
     pending.push(tasks.filter(t=>!t.completed).length);
 
-    // overdue count
     const today = new Date();
     today.setHours(0,0,0,0);
     const over = tasks.filter(t => {
@@ -689,14 +687,12 @@ function renderChart(){
     }
   });
 
-  // Performance badges
   const top = labels[completed.indexOf(Math.max(...completed))] || "-";
-  const mostCompleted = top;
   const mostOverdue = labels[overdue.indexOf(Math.max(...overdue))] || "-";
 
-  document.querySelector("#topPerformer strong").textContent = top;
-  document.querySelector("#mostCompleted strong").textContent = mostCompleted;
-  document.querySelector("#mostOverdue strong").textContent = mostOverdue;
+  document.getElementById("topPerformer").textContent = top;
+  document.getElementById("mostCompleted").textContent = top;
+  document.getElementById("mostOverdue").textContent = mostOverdue;
 }
 
 setupRealtime();
