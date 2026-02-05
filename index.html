@@ -124,6 +124,7 @@ body{
 }
 
 .card{
+  position: relative; /* Added for last visited positioning */
   background:var(--card);
   border-radius:16px;
   padding:18px;
@@ -136,12 +137,19 @@ body{
   font-weight:800;
 }
 
-#progress{
-  color:var(--muted);
-  font-size:0.9em;
+/* Last visited section */
+#lastVisited {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 0.85em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
 }
 
-/* Task input */
 #newTaskInput{
   width:100%;
   padding:12px;
@@ -408,6 +416,16 @@ body.dark .status.pending{background:rgba(241,196,15,0.2);}
     <section class="main">
       <div class="card">
         <h2 id="memberTitle">Select a member</h2>
+
+        <!-- Last visited added -->
+        <div id="lastVisited" style="display:none;">
+          <span>Last visited:</span>
+          <span id="lastVisitedTime">-</span>
+          <svg style="width:16px; height:16px; fill: var(--muted);" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M12 1a11 11 0 1 0 11 11A11 11 0 0 0 12 1zm0 20a9 9 0 1 1 9-9 9 9 0 0 1-9 9zm.5-14h-1v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+          </svg>
+        </div>
+
         <div id="progress"></div>
         <input type="text" id="newTaskInput" placeholder="Enter new task..." />
         <button id="addTaskBtn">Add Task</button>
@@ -498,6 +516,9 @@ const sidebar = document.getElementById("sidebar");
 const chartBox = document.getElementById("chartBox");
 const backBtn = document.getElementById("backBtn");
 
+const lastVisitedTimeSpan = document.getElementById("lastVisitedTime");
+const lastVisitedDiv = document.getElementById("lastVisited");
+
 // Dark mode
 const darkModeEnabled = localStorage.getItem("darkMode") === "true";
 if (darkModeEnabled) {
@@ -561,220 +582,306 @@ function setupRealtime(){
   });
 }
 
+// Format time ago
+function timeAgo(timestamp) {
+  if (!timestamp) return "-";
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return `${seconds} seconds ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} minutes ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hours ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} days ago`;
+}
+
+// Fetch and display last visited for selected member
+async function fetchLastVisited(member) {
+  if (!member) {
+    lastVisitedDiv.style.display = "none";
+    return;
+  }
+  lastVisitedDiv.style.display = "flex";
+  const doc = await db.collection("taskViews").doc(member).get();
+  if (doc.exists) {
+    const lastVisit = doc.data().lastVisited;
+    lastVisitedTimeSpan.textContent = timeAgo(lastVisit);
+  } else {
+    lastVisitedTimeSpan.textContent = "Never";
+  }
+}
+
+// Update last visited timestamp on member click
+async function updateLastVisited(member) {
+  if (!member) return;
+  await db.collection("taskViews").doc(member).set({
+    lastVisited: Date.now()
+  });
+}
+
 // Render members
 function renderMembers(){
   membersDiv.innerHTML = "";
   members.forEach(m=>{
     const pending = data[m]?.filter(t=>!t.completed).length || 0;
     const div = document.createElement("div");
-    div.className = "member";
-    div.dataset.member = m;
-    div.innerHTML = m + (pending ? ` <span class="badge">${pending}</span>` : "");
-    if(m===selectedMember) div.classList.add("active");
-    div.onclick = () => {
+    div.className = "member" + (m === selectedMember ? " active" : "");
+    div.textContent = m;
+    if(pending>0){
+      const badge = document.createElement("span");
+      badge.className = "badge";
+      badge.textContent = pending;
+      div.appendChild(badge);
+    }
+    div.onclick = async () => {
       selectedMember = m;
       localStorage.setItem("selectedMember", m);
 
-      // ** MEMBER VIEW MODE **
+      await updateLastVisited(m);
+
       sidebar.style.display = "none";
       chartBox.style.display = "none";
       backBtn.style.display = "block";
 
       renderMembers();
       renderTasks();
+      fetchLastVisited(m);
     };
     membersDiv.appendChild(div);
   });
 }
 
-// Back button
-backBtn.onclick = () => {
-  sidebar.style.display = "block";
-  chartBox.style.display = "block";
-  backBtn.style.display = "none";
-  selectedMember = null;
-  localStorage.removeItem("selectedMember");
-  memberTitle.textContent = "Select a member";
-  taskList.innerHTML = "";
-  renderMembers();
-  renderChart();
-};
-
-// Progress
-function renderProgress(){
-  if(!selectedMember) return progressDiv.textContent="";
-  const total = data[selectedMember].length;
-  const completed = data[selectedMember].filter(t=>t.completed).length;
-  const percent = total ? Math.round(completed/total*100) : 0;
-  progressDiv.textContent = `Progress: ${completed}/${total} (${percent}%)`;
-}
-
-// Render tasks
+// Render tasks for selected member
 function renderTasks(){
+  if(!selectedMember){
+    memberTitle.textContent = "Select a member";
+    taskList.innerHTML = "";
+    progressDiv.textContent = "";
+    newTaskInput.style.display = "none";
+    addTaskBtn.style.display = "none";
+    lastVisitedDiv.style.display = "none";
+    return;
+  }
+
+  memberTitle.textContent = selectedMember;
+  newTaskInput.style.display = "block";
+  addTaskBtn.style.display = "block";
+  lastVisitedDiv.style.display = "flex";
+
+  const tasks = data[selectedMember] || [];
   taskList.innerHTML = "";
-  if(!selectedMember) return memberTitle.textContent="Select a member";
-  memberTitle.textContent = selectedMember + "'s Tasks";
-  renderProgress();
 
-  data[selectedMember].forEach((task,i)=>{
+  if(tasks.length === 0){
+    taskList.innerHTML = "<li>No tasks yet.</li>";
+  }
+
+  tasks.forEach((task, i) => {
     const li = document.createElement("li");
-
     const row = document.createElement("div");
     row.className = "task-row";
 
-    const text = document.createElement("span");
+    const text = document.createElement("div");
     text.className = "task-text";
-    text.innerHTML = task.completed ? "✔️ " + task.text : task.text;
+    text.textContent = task.text + (task.schedule ? ` (Due: ${task.schedule})` : "");
+    if(task.completed){
+      text.style.textDecoration = "line-through";
+      text.style.color = "#777";
+    }
     row.appendChild(text);
 
-    const info = document.createElement("div");
-    info.className = "task-info";
-    const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
-
-    let dueText = "No due date";
-    let dueColor = "#666";
-    let overdueLabel = "";
-
-    if(task.dueDate){
-      const dueDateObj = new Date(task.dueDate);
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      dueText = dueDateObj.toLocaleDateString();
-      if(!task.completed && dueDateObj < today){
-        dueColor = "#e74c3c";
-        overdueLabel = "PAST DUE";
-      }
-    }
-
-    info.textContent = `Created: ${created} • Due: ${dueText}`;
-    info.style.color = dueColor;
-    row.appendChild(info);
-
-    const status = document.createElement("span");
+    const status = document.createElement("div");
     status.className = "status " + (task.completed ? "completed" : "pending");
-    status.textContent = task.completed ? "COMPLETED" : "PENDING";
+    status.textContent = task.completed ? "Completed" : "Pending";
     row.appendChild(status);
-
-    if(overdueLabel){
-      const pastDue = document.createElement("span");
-      pastDue.className = "pastdue";
-      pastDue.textContent = overdueLabel;
-      row.appendChild(pastDue);
-    }
 
     const btnRow = document.createElement("div");
     btnRow.className = "btnRow";
 
     if(!task.completed){
       const completeBtn = document.createElement("button");
-      completeBtn.className="smallBtn completeBtn";
-      completeBtn.textContent="Complete";
-      completeBtn.onclick = async ()=>{
-        task.completed = true;
-        await saveTasks();
-        confetti();
-      };
+      completeBtn.className = "smallBtn completeBtn";
+      completeBtn.textContent = "✓";
+      completeBtn.title = "Mark Completed";
+      completeBtn.onclick = () => markCompleted(i);
       btnRow.appendChild(completeBtn);
     }
 
+    const scheduleBtn = document.createElement("button");
+    scheduleBtn.className = "smallBtn";
+    scheduleBtn.textContent = "📅";
+    scheduleBtn.title = "Set Schedule";
+    scheduleBtn.onclick = () => openPopup(i);
+    btnRow.appendChild(scheduleBtn);
+
     const deleteBtn = document.createElement("button");
-    deleteBtn.className="smallBtn deleteBtn";
-    deleteBtn.textContent="Remove";
-    deleteBtn.onclick = async ()=>{
-      if(!isAdmin) return alert("Admin only");
-      data[selectedMember].splice(i,1);
-      await saveTasks();
-    };
+    deleteBtn.className = "smallBtn deleteBtn";
+    deleteBtn.textContent = "✕";
+    deleteBtn.title = "Delete Task";
+    deleteBtn.onclick = () => deleteTask(i);
     btnRow.appendChild(deleteBtn);
 
-    row.appendChild(btnRow);
     li.appendChild(row);
+    li.appendChild(btnRow);
+
+    // Past due highlight
+    if(task.schedule && !task.completed){
+      const dueDate = new Date(task.schedule);
+      const now = new Date();
+      if(dueDate < now){
+        const overdue = document.createElement("span");
+        overdue.className = "pastdue";
+        overdue.textContent = "Past due!";
+        li.appendChild(overdue);
+      }
+    }
+
     taskList.appendChild(li);
   });
-}
 
-// Save tasks
-async function saveTasks(){
-  await db.collection("tasks").doc(selectedMember).set({ tasks: data[selectedMember] });
+  // Show progress
+  const completedCount = tasks.filter(t=>t.completed).length;
+  const totalCount = tasks.length;
+  progressDiv.textContent = `Completed: ${completedCount} / ${totalCount}`;
+
+  // Show last visited time
+  fetchLastVisited(selectedMember);
 }
 
 // Add task
-addTaskBtn.onclick = async ()=>{
-  if(!isAdmin) return alert("Admin only");
-  if(!newTaskInput.value.trim()) return;
-  popup.style.display="flex";
+addTaskBtn.onclick = () => {
+  const text = newTaskInput.value.trim();
+  if(!text) return alert("Enter task text");
+  const tasks = data[selectedMember] || [];
+  tasks.push({text, completed:false});
+  db.collection("tasks").doc(selectedMember).set({tasks})
+    .then(() => {
+      newTaskInput.value = "";
+    });
 };
 
-// Popup actions
-popupOk.onclick = async ()=>{
-  const dueDate = popupDate.value;
-  data[selectedMember].push({
-    text: newTaskInput.value,
-    completed:false,
-    createdAt: Date.now(),
-    dueDate: dueDate
-  });
-  newTaskInput.value="";
-  popupDate.value="";
-  popup.style.display="none";
-  await saveTasks();
+// Mark completed
+function markCompleted(index){
+  const tasks = data[selectedMember];
+  if(!tasks || !tasks[index]) return;
+  tasks[index].completed = true;
+  db.collection("tasks").doc(selectedMember).set({tasks});
+  confetti();
+}
+
+// Delete task
+function deleteTask(index){
+  const tasks = data[selectedMember];
+  if(!tasks || !tasks[index]) return;
+  tasks.splice(index,1);
+  db.collection("tasks").doc(selectedMember).set({tasks});
+}
+
+// Open schedule popup
+let scheduleIndex = null;
+function openPopup(index){
+  scheduleIndex = index;
+  popup.style.display = "flex";
+  popupDate.value = data[selectedMember][index].schedule || "";
+}
+
+popupOk.onclick = () => {
+  if(scheduleIndex === null) return;
+  data[selectedMember][scheduleIndex].schedule = popupDate.value || null;
+  db.collection("tasks").doc(selectedMember).set({tasks: data[selectedMember]});
+  scheduleIndex = null;
+  popup.style.display = "none";
 };
 
-popupCancel.onclick = ()=> popup.style.display="none";
+popupCancel.onclick = () => {
+  scheduleIndex = null;
+  popup.style.display = "none";
+};
 
-// Chart + Performance
+// Back button
+backBtn.onclick = () => {
+  selectedMember = null;
+  localStorage.removeItem("selectedMember");
+  sidebar.style.display = "block";
+  chartBox.style.display = "block";
+  backBtn.style.display = "none";
+  renderMembers();
+  renderTasks();
+  lastVisitedDiv.style.display = "none";
+};
+
+// Render chart
 function renderChart(){
-  const labels = members;
-  const total = [];
-  const completed = [];
-  const pending = [];
-  const overdue = [];
+  if(chart) chart.destroy();
+
+  // Aggregate data
+  let completedPerMember = {};
+  let overduePerMember = {};
+  let totalCompleted = 0;
+  let topPerformer = null;
+  let mostCompleted = null;
+  let mostOverdue = null;
 
   members.forEach(m=>{
     const tasks = data[m] || [];
-    total.push(tasks.length);
-    completed.push(tasks.filter(t=>t.completed).length);
-    pending.push(tasks.filter(t=>!t.completed).length);
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const over = tasks.filter(t => {
-      if(!t.dueDate) return false;
-      const due = new Date(t.dueDate);
-      return !t.completed && due < today;
+    const completed = tasks.filter(t=>t.completed).length;
+    const overdue = tasks.filter(t=>{
+      if(!t.schedule || t.completed) return false;
+      return new Date(t.schedule) < new Date();
     }).length;
-    overdue.push(over);
+    completedPerMember[m] = completed;
+    overduePerMember[m] = overdue;
+    totalCompleted += completed;
   });
+
+  topPerformer = Object.entries(overduePerMember).sort((a,b)=>a[1]-b[1])[0]?.[0] || "-";
+  mostCompleted = Object.entries(completedPerMember).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+  mostOverdue = Object.entries(overduePerMember).sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+
+  document.getElementById("topPerformer").textContent = topPerformer;
+  document.getElementById("mostCompleted").textContent = mostCompleted;
+  document.getElementById("mostOverdue").textContent = mostOverdue;
 
   const ctx = document.getElementById("chart").getContext("2d");
-  if(chart) chart.destroy();
-
   chart = new Chart(ctx, {
-    type:"bar",
-    data:{
-      labels: labels,
-      datasets:[
-        { label:"Total", data: total, backgroundColor:"rgba(45,108,223,0.7)" },
-        { label:"Completed", data: completed, backgroundColor:"rgba(46,204,113,0.7)" },
-        { label:"Pending", data: pending, backgroundColor:"rgba(241,196,15,0.7)" }
-      ]
+    type: "bar",
+    data: {
+      labels: members,
+      datasets: [{
+        label: "Completed Tasks",
+        data: members.map(m => completedPerMember[m]),
+        backgroundColor: "rgba(45,108,223,0.8)",
+        borderRadius: 12,
+      },{
+        label: "Overdue Tasks",
+        data: members.map(m => overduePerMember[m]),
+        backgroundColor: "rgba(231,76,60,0.8)",
+        borderRadius: 12,
+      }]
     },
-    options:{
+    options: {
       responsive:true,
-      scales:{ y:{ beginAtZero:true } }
+      scales:{
+        y: {
+          beginAtZero: true,
+          stepSize: 1
+        }
+      }
     }
   });
-
-  const top = labels[completed.indexOf(Math.max(...completed))] || "-";
-  const mostOverdue = labels[overdue.indexOf(Math.max(...overdue))] || "-";
-
-  document.getElementById("topPerformer").textContent = top;
-  document.getElementById("mostCompleted").textContent = top;
-  document.getElementById("mostOverdue").textContent = mostOverdue;
 }
 
-// Run
+// Initial setup
 setupRealtime();
+
+// CONFETTI FUNCTION
+function confetti(){
+  confetti({
+    particleCount: 60,
+    spread: 70,
+    origin: { y: 0.6 }
+  });
+}
+
 </script>
 </body>
 </html>
