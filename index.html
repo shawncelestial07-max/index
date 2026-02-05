@@ -142,6 +142,12 @@ body{
 }
 
 /* Task input */
+/* HIDE by default */
+#newTaskInput,
+#addTaskBtn {
+  display: none;
+}
+
 #newTaskInput{
   width:100%;
   padding:12px;
@@ -575,7 +581,7 @@ function renderMembers(){
       selectedMember = m;
       localStorage.setItem("selectedMember", m);
 
-      // ** MEMBER VIEW MODE **
+      // MEMBER VIEW MODE
       sidebar.style.display = "none";
       chartBox.style.display = "none";
       backBtn.style.display = "block";
@@ -596,6 +602,8 @@ backBtn.onclick = () => {
   localStorage.removeItem("selectedMember");
   memberTitle.textContent = "Select a member";
   taskList.innerHTML = "";
+  newTaskInput.style.display = "none";
+  addTaskBtn.style.display = "none";
   renderMembers();
   renderChart();
 };
@@ -612,8 +620,19 @@ function renderProgress(){
 // Render tasks
 function renderTasks(){
   taskList.innerHTML = "";
-  if(!selectedMember) return memberTitle.textContent="Select a member";
+
+  if(!selectedMember) {
+    memberTitle.textContent = "Select a member";
+    newTaskInput.style.display = "none";
+    addTaskBtn.style.display = "none";
+    progressDiv.textContent = "";
+    return;
+  }
+
   memberTitle.textContent = selectedMember + "'s Tasks";
+  newTaskInput.style.display = "block";
+  addTaskBtn.style.display = "block";
+
   renderProgress();
 
   data[selectedMember].forEach((task,i)=>{
@@ -629,152 +648,185 @@ function renderTasks(){
 
     const info = document.createElement("div");
     info.className = "task-info";
-    const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
+    const due = task.dueDate ? new Date(task.dueDate) : null;
+    const dueStr = due ? due.toLocaleDateString() : "No due date";
+    info.textContent = `Due: ${dueStr}`;
 
-    let dueText = "No due date";
-    let dueColor = "#666";
-    let overdueLabel = "";
-
-    if(task.dueDate){
-      const dueDateObj = new Date(task.dueDate);
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      dueText = dueDateObj.toLocaleDateString();
-      if(!task.completed && dueDateObj < today){
-        dueColor = "#e74c3c";
-        overdueLabel = "PAST DUE";
-      }
+    if(due && !task.completed && due < new Date()){
+      const overdue = document.createElement("span");
+      overdue.className = "pastdue";
+      overdue.textContent = " (Past Due)";
+      info.appendChild(overdue);
     }
 
-    info.textContent = `Created: ${created} • Due: ${dueText}`;
-    info.style.color = dueColor;
-    row.appendChild(info);
+    li.appendChild(row);
+    li.appendChild(info);
 
-    const status = document.createElement("span");
-    status.className = "status " + (task.completed ? "completed" : "pending");
-    status.textContent = task.completed ? "COMPLETED" : "PENDING";
-    row.appendChild(status);
+    if(isAdmin){
+      const btnRow = document.createElement("div");
+      btnRow.className = "btnRow";
 
-    if(overdueLabel){
-      const pastDue = document.createElement("span");
-      pastDue.className = "pastdue";
-      pastDue.textContent = overdueLabel;
-      row.appendChild(pastDue);
-    }
-
-    const btnRow = document.createElement("div");
-    btnRow.className = "btnRow";
-
-    if(!task.completed){
       const completeBtn = document.createElement("button");
-      completeBtn.className="smallBtn completeBtn";
-      completeBtn.textContent="Complete";
-      completeBtn.onclick = async ()=>{
-        task.completed = true;
-        await saveTasks();
-        confetti();
+      completeBtn.className = "smallBtn completeBtn";
+      completeBtn.textContent = task.completed ? "Undo" : "Complete";
+      completeBtn.onclick = () => {
+        toggleComplete(i);
       };
       btnRow.appendChild(completeBtn);
+
+      const scheduleBtn = document.createElement("button");
+      scheduleBtn.className = "smallBtn";
+      scheduleBtn.textContent = "Schedule";
+      scheduleBtn.onclick = () => {
+        openPopup(i);
+      };
+      btnRow.appendChild(scheduleBtn);
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "smallBtn deleteBtn";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = () => {
+        deleteTask(i);
+      };
+      btnRow.appendChild(deleteBtn);
+
+      li.appendChild(btnRow);
     }
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className="smallBtn deleteBtn";
-    deleteBtn.textContent="Remove";
-    deleteBtn.onclick = async ()=>{
-      if(!isAdmin) return alert("Admin only");
-      data[selectedMember].splice(i,1);
-      await saveTasks();
-    };
-    btnRow.appendChild(deleteBtn);
-
-    row.appendChild(btnRow);
-    li.appendChild(row);
     taskList.appendChild(li);
   });
 }
 
-// Save tasks
-async function saveTasks(){
-  await db.collection("tasks").doc(selectedMember).set({ tasks: data[selectedMember] });
+// Toggle complete
+function toggleComplete(index){
+  const tasks = data[selectedMember];
+  tasks[index].completed = !tasks[index].completed;
+  saveData();
 }
 
-// Add task
-addTaskBtn.onclick = async ()=>{
-  if(!isAdmin) return alert("Admin only");
-  if(!newTaskInput.value.trim()) return;
-  popup.style.display="flex";
-};
+// Delete task
+function deleteTask(index){
+  if(!confirm("Delete this task?")) return;
+  const tasks = data[selectedMember];
+  tasks.splice(index,1);
+  saveData();
+}
 
-// Popup actions
-popupOk.onclick = async ()=>{
-  const dueDate = popupDate.value;
+// Save data
+function saveData(){
+  db.collection("tasks").doc(selectedMember).set({tasks: data[selectedMember]})
+  .catch(console.error);
+}
+
+// Add task button
+addTaskBtn.onclick = () => {
+  const val = newTaskInput.value.trim();
+  if(!val) return;
   data[selectedMember].push({
-    text: newTaskInput.value,
-    completed:false,
-    createdAt: Date.now(),
-    dueDate: dueDate
+    text: val,
+    completed: false,
+    dueDate: null
   });
-  newTaskInput.value="";
-  popupDate.value="";
-  popup.style.display="none";
-  await saveTasks();
+  newTaskInput.value = "";
+  saveData();
+  renderTasks();
 };
 
-popupCancel.onclick = ()=> popup.style.display="none";
+// Popup
+let currentTaskIndex = null;
+function openPopup(i){
+  currentTaskIndex = i;
+  popupDate.value = "";
+  popup.style.display = "flex";
+}
+popupOk.onclick = () => {
+  if(currentTaskIndex === null) return;
+  const dateVal = popupDate.value;
+  if(!dateVal) return alert("Please select a date");
+  data[selectedMember][currentTaskIndex].dueDate = dateVal;
+  saveData();
+  popup.style.display = "none";
+  renderTasks();
+};
+popupCancel.onclick = () => {
+  popup.style.display = "none";
+};
 
-// Chart + Performance
+// Chart
 function renderChart(){
+  if(chart) chart.destroy();
+
+  // Gather data for all members
   const labels = members;
-  const total = [];
-  const completed = [];
-  const pending = [];
-  const overdue = [];
-
-  members.forEach(m=>{
+  const completedData = members.map(m=>data[m]?.filter(t=>t.completed).length || 0);
+  const pendingData = members.map(m=>(data[m]?.length || 0) - (data[m]?.filter(t=>t.completed).length || 0));
+  const overdueData = members.map(m=>{
     const tasks = data[m] || [];
-    total.push(tasks.length);
-    completed.push(tasks.filter(t=>t.completed).length);
-    pending.push(tasks.filter(t=>!t.completed).length);
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const over = tasks.filter(t => {
+    return tasks.filter(t=>{
       if(!t.dueDate) return false;
-      const due = new Date(t.dueDate);
-      return !t.completed && due < today;
+      if(t.completed) return false;
+      return new Date(t.dueDate) < new Date();
     }).length;
-    overdue.push(over);
   });
 
   const ctx = document.getElementById("chart").getContext("2d");
-  if(chart) chart.destroy();
-
   chart = new Chart(ctx, {
     type:"bar",
     data:{
-      labels: labels,
+      labels,
       datasets:[
-        { label:"Total", data: total, backgroundColor:"rgba(45,108,223,0.7)" },
-        { label:"Completed", data: completed, backgroundColor:"rgba(46,204,113,0.7)" },
-        { label:"Pending", data: pending, backgroundColor:"rgba(241,196,15,0.7)" }
+        {
+          label:"Completed",
+          data: completedData,
+          backgroundColor:"rgba(46,204,113,0.7)"
+        },
+        {
+          label:"Pending",
+          data: pendingData,
+          backgroundColor:"rgba(241,196,15,0.7)"
+        },
+        {
+          label:"Overdue",
+          data: overdueData,
+          backgroundColor:"rgba(231,76,60,0.7)"
+        }
       ]
     },
     options:{
       responsive:true,
-      scales:{ y:{ beginAtZero:true } }
+      scales:{
+        y:{
+          beginAtZero:true,
+          ticks:{
+            stepSize:1
+          }
+        }
+      }
     }
   });
 
-  const top = labels[completed.indexOf(Math.max(...completed))] || "-";
-  const mostOverdue = labels[overdue.indexOf(Math.max(...overdue))] || "-";
+  // Update stats
+  const topPerf = members.reduce((a,b)=>{
+    return (completedData[members.indexOf(a)] || 0) > (completedData[members.indexOf(b)] || 0) ? a : b;
+  });
+  const mostComp = members.reduce((a,b)=>{
+    return (completedData[members.indexOf(a)] || 0) > (completedData[members.indexOf(b)] || 0) ? a : b;
+  });
+  const mostOverdue = members.reduce((a,b)=>{
+    return (overdueData[members.indexOf(a)] || 0) > (overdueData[members.indexOf(b)] || 0) ? a : b;
+  });
 
-  document.getElementById("topPerformer").textContent = top;
-  document.getElementById("mostCompleted").textContent = top;
-  document.getElementById("mostOverdue").textContent = mostOverdue;
+  document.getElementById("topPerformer").textContent = topPerf || "-";
+  document.getElementById("mostCompleted").textContent = mostComp || "-";
+  document.getElementById("mostOverdue").textContent = mostOverdue || "-";
 }
 
-// Run
+// Initial load
 setupRealtime();
+renderMembers();
+renderTasks();
+renderChart();
 </script>
+
 </body>
 </html>
