@@ -571,11 +571,17 @@ function renderMembers(){
     div.dataset.member = m;
     div.innerHTML = m + (pending ? ` <span class="badge">${pending}</span>` : "");
     if(m===selectedMember) div.classList.add("active");
+
     div.onclick = () => {
       selectedMember = m;
       localStorage.setItem("selectedMember", m);
 
-      // ** MEMBER VIEW MODE **
+      // ===== Record last visited timestamp in Firebase =====
+      db.collection("tasks").doc(m).set({
+        lastVisited: Date.now()
+      }, { merge: true });
+
+      // Switch view
       sidebar.style.display = "none";
       chartBox.style.display = "none";
       backBtn.style.display = "block";
@@ -586,6 +592,7 @@ function renderMembers(){
     membersDiv.appendChild(div);
   });
 }
+
 
 // Back button
 backBtn.onclick = () => {
@@ -799,4 +806,5 @@ setupRealtime();
 </script>
 </body>
 </html>
+
 
