@@ -497,6 +497,16 @@ const darkToggle = document.getElementById("darkToggle");
 const sidebar = document.getElementById("sidebar");
 const chartBox = document.getElementById("chartBox");
 const backBtn = document.getElementById("backBtn");
+// ===== MEMBER MODE CHECK =====
+const memberMode = localStorage.getItem("memberMode") === "true";
+if(memberMode){
+  isAdmin = false;             // member cannot add/delete tasks
+  addTaskBtn.disabled = true;  // hide add button
+  emailInput.style.display = "none";
+  passInput.style.display = "none";
+  loginBtn.style.display = "none";
+  logoutBtn.style.display = "none";
+}
 
 // Dark mode
 const darkModeEnabled = localStorage.getItem("darkMode") === "true";
