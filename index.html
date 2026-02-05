@@ -473,19 +473,7 @@ const auth = firebase.auth();
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar","Yvone"];
 let selectedMember = localStorage.getItem("selectedMember") || null;
 let data = {};
-let chart = null;let chart = null;
-
-// ===== MEMBER MODE CHECK =====
-const memberMode = localStorage.getItem("memberMode") === "true";
-if(memberMode){
-  isAdmin = false;        // member cannot add/delete tasks
-  addTaskBtn.disabled = true;
-  emailInput.style.display = "none";
-  passInput.style.display = "none";
-  loginBtn.style.display = "none";
-  logoutBtn.style.display = "none";
-}
-
+let chart = null;
 
 // DOM
 const membersDiv = document.getElementById("members");
@@ -818,6 +806,4 @@ setupRealtime();
 </script>
 </body>
 </html>
-
-
 
