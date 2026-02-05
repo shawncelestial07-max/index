@@ -4,77 +4,407 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>TASK TRACKER</title>
-<style>
-:root{ --bg:#f4f6fb; --card:#fff; --text:#2c2c2c; --muted:#6c6c6c; --blue:#2d6cdf; --green:#2ecc71; --red:#e74c3c; --shadow:rgba(0,0,0,0.08); --shadow2:rgba(0,0,0,0.12); }
-*{box-sizing:border-box;}
-body{ font-family:"Inter", Arial, sans-serif; background:var(--bg); color:var(--text); margin:0; min-height:100vh; }
 
-/* ===== ENTRY OVERLAY ===== */
-#entryOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(244,246,251,0.95);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:999999;
+<style>
+:root{
+  --bg:#f4f6fb;
+  --card:#fff;
+  --text:#2c2c2c;
+  --muted:#6c6c6c;
+  --blue:#2d6cdf;
+  --green:#2ecc71;
+  --red:#e74c3c;
+  --shadow:rgba(0,0,0,0.08);
+  --shadow2:rgba(0,0,0,0.12);
 }
-.entryBox{
-  background:#fff;
-  padding:24px;
+
+*{box-sizing:border-box;}
+body{
+  font-family:"Inter", Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  margin:0;
+  min-height:100vh;
+}
+
+/* ===== Layout ===== */
+.page{
+  display:grid;
+  grid-template-rows: auto 1fr auto;
+  min-height:100vh;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 24px;
+  background:var(--card);
+  border-bottom:1px solid #eee;
+  box-shadow:0 2px 10px var(--shadow);
+}
+
+.header .title{
+  font-weight:800;
+  letter-spacing:0.5px;
+}
+
+.header .controls{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+#darkToggle{
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  font-size:18px;
+}
+
+.container{
+  display:grid;
+  grid-template-columns: 280px 1fr;
+  gap:18px;
+  padding:20px 24px;
+}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  background:var(--card);
   border-radius:16px;
-  width:320px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.15);
+  padding:16px;
+  box-shadow:0 10px 25px var(--shadow);
+}
+
+.sidebar h2{
+  margin:0 0 12px 0;
+  font-size:16px;
+  font-weight:700;
+}
+
+.member{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 12px;
+  margin:8px 0;
+  border-radius:12px;
+  background:#fafafa;
+  border:1px solid #eee;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+.member:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 20px var(--shadow);
+}
+
+.member.active{
+  background:var(--blue);
+  color:#fff;
+  border-color:var(--blue);
+}
+
+.badge{
+  font-size:0.7em;
+  padding:2px 6px;
+  border-radius:10px;
+  background:#f1c40f;
+  color:#333;
+  font-weight:600;
+}
+
+/* ===== Main Content ===== */
+.main{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:18px;
+  box-shadow:0 10px 25px var(--shadow);
+}
+
+.card h2{
+  margin:0 0 12px 0;
+  font-size:18px;
+  font-weight:800;
+}
+
+#progress{
+  color:var(--muted);
+  font-size:0.9em;
+}
+
+/* Task input */
+#newTaskInput{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  margin-bottom:10px;
+  outline:none;
+  transition:0.2s ease;
+}
+
+#newTaskInput:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 3px rgba(45,108,223,0.12);
+}
+
+#addTaskBtn{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:var(--blue);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+#addTaskBtn:hover{
+  background:#265fb8;
+}
+
+/* Task list */
+ul#taskList{
+  list-style:none;
+  padding:0;
+  margin:14px 0 0 0;
+}
+
+ul#taskList li{
+  background:#fafafa;
+  border:1px solid #eee;
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:10px;
+}
+
+.task-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.task-text{
+  flex:1;
+  font-weight:600;
+}
+
+.task-info{
+  font-size:0.75em;
+  color:var(--muted);
+  margin-top:6px;
+}
+
+.status{
+  font-size:0.75em;
+  font-weight:700;
+  padding:4px 8px;
+  border-radius:10px;
+}
+
+.status.completed{background:rgba(46,204,113,0.15); color:var(--green);}
+.status.pending{background:rgba(241,196,15,0.15); color:#f1c40f;}
+
+.pastdue{
+  color:var(--red);
+  font-weight:800;
+  font-size:0.75em;
+  margin-left:8px;
+}
+
+.btnRow{
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+
+button.smallBtn{
+  border:none;
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:700;
+}
+
+.completeBtn{
+  background:var(--green);
+  color:#fff;
+}
+
+.deleteBtn{
+  background:var(--red);
+  color:#fff;
+}
+
+/* Chart */
+#chartBox{
+  padding:18px;
+}
+
+.performance{
+  display:flex;
+  gap:12px;
+  margin-top:12px;
+}
+
+.performance .item{
+  flex:1;
+  background:#fafafa;
+  border:1px solid #eee;
+  border-radius:14px;
+  padding:12px;
   text-align:center;
 }
-.entryBox h2{margin-bottom:12px;}
-.entryBox input,
-.entryBox button{
+
+.performance .item strong{
+  display:block;
+  font-size:18px;
+  margin-top:6px;
+}
+
+.performance .item span{
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* Back Button */
+#backBtn{
+  display:none;
+  margin-top:12px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:none;
+  background:#888;
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+}
+
+/* Login */
+#loginSection{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  padding:16px 24px;
+  background:var(--card);
+  border-top:1px solid #eee;
+}
+
+#loginSection input{
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #ddd;
+  width:150px;
+}
+
+#loginSection button{
+  padding:10px 12px;
+  border-radius:12px;
+  border:none;
+  background:var(--blue);
+  color:#fff;
+  cursor:pointer;
+  font-weight:700;
+}
+
+/* Dark mode */
+body.dark{
+  background:#121212;
+  color:#f1f1f1;
+}
+
+body.dark .card,
+body.dark .sidebar,
+body.dark #loginSection,
+body.dark #header{
+  background:#1e1e1e;
+  border-color:#333;
+}
+
+body.dark .member{background:#2a2a2a; border-color:#333;}
+body.dark ul#taskList li{background:#2a2a2a; border-color:#333;}
+body.dark #newTaskInput{background:#2a2a2a; color:#f1f1f1; border-color:#444;}
+body.dark .performance .item{background:#2a2a2a; border-color:#333;}
+body.dark .status.completed{background:rgba(46,204,113,0.2);}
+body.dark .status.pending{background:rgba(241,196,15,0.2);}
+
+@media (max-width: 860px){
+  .container{grid-template-columns: 1fr;}
+  .sidebar{order:2;}
+  .main{order:1;}
+}
+
+/* ===== POPUP ===== */
+#popup{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.5);
+  display:none;
+  justify-content:center;
+  align-items:center;
+}
+
+#popupBox{
+  background:#fff;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:360px;
+  text-align:center;
+}
+
+#popupBox input{
   width:100%;
   padding:10px;
   border-radius:10px;
+  border:1px solid #ddd;
   margin-top:10px;
 }
-.entryBox button{
+
+#popupBox button{
+  margin-top:12px;
+  padding:10px 16px;
+  border-radius:10px;
   border:none;
-  font-weight:700;
   cursor:pointer;
 }
-#entryAdminBtn{background:var(--blue); color:#fff;}
-#entryMemberBtn{background:#555; color:#fff;}
 
-/* ===== ORIGINAL STYLES ===== */
-/* Paste all your original CSS here (from your <style> tag) */
-... 
-/* To save space in this snippet, your original styles are kept intact */
+#popupOk{background:var(--blue); color:#fff;}
+#popupCancel{background:var(--red); color:#fff;}
 </style>
 </head>
+
 <body>
-
-<!-- ===== ENTRY OVERLAY ===== -->
-<div id="entryOverlay">
-  <div class="entryBox">
-    <h2>Task Tracker</h2>
-    <input id="entryEmail" type="email" placeholder="Admin Email">
-    <input id="entryPassword" type="password" placeholder="Password">
-    <button id="entryAdminBtn">Admin Login</button>
-    <button id="entryMemberBtn">Member</button>
-  </div>
-</div>
-
-<!-- ===== ORIGINAL PAGE ===== -->
 <div class="page">
+
   <header class="header">
     <div class="title">TASK TRACKER</div>
     <div class="controls">
       <button id="darkToggle">🌙</button>
     </div>
   </header>
+
   <main class="container">
     <aside class="sidebar" id="sidebar">
       <h2>Members</h2>
       <div id="members"></div>
     </aside>
+
     <section class="main">
       <div class="card">
         <h2 id="memberTitle">Select a member</h2>
@@ -84,6 +414,7 @@ body{ font-family:"Inter", Arial, sans-serif; background:var(--bg); color:var(--
         <ul id="taskList"></ul>
         <button id="backBtn">Back</button>
       </div>
+
       <div class="card" id="chartBox">
         <canvas id="chart"></canvas>
         <div class="performance">
@@ -103,6 +434,7 @@ body{ font-family:"Inter", Arial, sans-serif; background:var(--bg); color:var(--
       </div>
     </section>
   </main>
+
   <footer id="loginSection">
     <span style="font-weight:700;">ADMIN</span>
     <input id="email" type="email" placeholder="Email" />
@@ -110,6 +442,7 @@ body{ font-family:"Inter", Arial, sans-serif; background:var(--bg); color:var(--
     <button id="loginBtn">Login</button>
     <button id="logoutBtn" style="display:none;">Logout</button>
   </footer>
+
 </div>
 
 <!-- POPUP -->
@@ -129,7 +462,6 @@ body{ font-family:"Inter", Arial, sans-serif; background:var(--bg); color:var(--
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
 
 <script>
-// ===== FIREBASE INIT =====
 firebase.initializeApp({
   apiKey: "AIzaSyCtVN-UVUnzxbpkkMgGiNeuchhe5269qQM",
   authDomain: "teamtasktracker-d2c06.firebaseapp.com",
@@ -138,34 +470,311 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ===== ENTRY PAGE LOGIC =====
-const entryOverlay = document.getElementById("entryOverlay");
-const entryEmail = document.getElementById("entryEmail");
-const entryPassword = document.getElementById("entryPassword");
-const entryAdminBtn = document.getElementById("entryAdminBtn");
-const entryMemberBtn = document.getElementById("entryMemberBtn");
+const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar","Yvone"];
+let selectedMember = localStorage.getItem("selectedMember") || null;
+let data = {};
+let chart = null;
 
-entryMemberBtn.onclick = () => {
-  entryOverlay.style.display = "none"; // Member bypass
+// DOM
+const membersDiv = document.getElementById("members");
+const memberTitle = document.getElementById("memberTitle");
+const newTaskInput = document.getElementById("newTaskInput");
+const addTaskBtn = document.getElementById("addTaskBtn");
+const taskList = document.getElementById("taskList");
+const progressDiv = document.getElementById("progress");
+
+const popup = document.getElementById("popup");
+const popupDate = document.getElementById("popupDate");
+const popupOk = document.getElementById("popupOk");
+const popupCancel = document.getElementById("popupCancel");
+
+const emailInput = document.getElementById("email");
+const passInput = document.getElementById("password");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const darkToggle = document.getElementById("darkToggle");
+const sidebar = document.getElementById("sidebar");
+const chartBox = document.getElementById("chartBox");
+const backBtn = document.getElementById("backBtn");
+
+// Dark mode
+const darkModeEnabled = localStorage.getItem("darkMode") === "true";
+if (darkModeEnabled) {
+  document.body.classList.add("dark");
+  darkToggle.textContent = "☀️";
+}
+darkToggle.onclick = () => {
+  document.body.classList.toggle("dark");
+  const isDark = document.body.classList.contains("dark");
+  localStorage.setItem("darkMode", isDark);
+  darkToggle.textContent = isDark ? "☀️" : "🌙";
 };
 
-entryAdminBtn.onclick = () => {
-  auth.signInWithEmailAndPassword(
-    entryEmail.value.trim(),
-    entryPassword.value.trim()
-  ).catch(err => alert(err.message));
+// Auth
+loginBtn.onclick = () => {
+  const email = emailInput.value.trim();
+  const pass = passInput.value.trim();
+  if(!email || !pass) return alert("Enter email & password");
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(()=>{ emailInput.value=""; passInput.value=""; })
+    .catch(err=>alert(err.message));
 };
 
-// Auto hide overlay if admin already logged in
-auth.onAuthStateChanged(user => {
-  if(user) entryOverlay.style.display = "none";
+logoutBtn.onclick = () => auth.signOut();
+
+let isAdmin = false;
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    isAdmin=false;
+    addTaskBtn.disabled=true;
+    logoutBtn.style.display="none";
+    loginBtn.style.display="block";
+    emailInput.style.display="inline-block";
+    passInput.style.display="inline-block";
+    return;
+  }
+  const token = await user.getIdTokenResult();
+  isAdmin = token.claims.admin;
+  addTaskBtn.disabled = !isAdmin;
+
+  loginBtn.style.display="none";
+  emailInput.style.display="none";
+  passInput.style.display="none";
+  logoutBtn.style.display="inline-block";
 });
 
-// ===== ORIGINAL JS STARTS =====
-// Paste your **entire original JS here** (members, tasks, chart, dark mode, popup, etc.)
-// Nothing is changed except the entry overlay above
-...
-</script>
+// Real-time updates
+let unsubscribe = null;
+function setupRealtime(){
+  if(unsubscribe) unsubscribe();
+  unsubscribe = db.collection("tasks").onSnapshot(snapshot=>{
+    data = {};
+    snapshot.forEach(doc=>{
+      data[doc.id] = doc.data().tasks || [];
+    });
+    members.forEach(m=>{ if(!data[m]) data[m]=[]; });
+    renderMembers();
+    renderTasks();
+    renderChart();
+  });
+}
 
+// Render members
+function renderMembers(){
+  membersDiv.innerHTML = "";
+  members.forEach(m=>{
+    const pending = data[m]?.filter(t=>!t.completed).length || 0;
+    const div = document.createElement("div");
+    div.className = "member";
+    div.dataset.member = m;
+    div.innerHTML = m + (pending ? ` <span class="badge">${pending}</span>` : "");
+    if(m===selectedMember) div.classList.add("active");
+    div.onclick = () => {
+      selectedMember = m;
+      localStorage.setItem("selectedMember", m);
+
+      // ** MEMBER VIEW MODE **
+      sidebar.style.display = "none";
+      chartBox.style.display = "none";
+      backBtn.style.display = "block";
+
+      renderMembers();
+      renderTasks();
+    };
+    membersDiv.appendChild(div);
+  });
+}
+
+// Back button
+backBtn.onclick = () => {
+  sidebar.style.display = "block";
+  chartBox.style.display = "block";
+  backBtn.style.display = "none";
+  selectedMember = null;
+  localStorage.removeItem("selectedMember");
+  memberTitle.textContent = "Select a member";
+  taskList.innerHTML = "";
+  renderMembers();
+  renderChart();
+};
+
+// Progress
+function renderProgress(){
+  if(!selectedMember) return progressDiv.textContent="";
+  const total = data[selectedMember].length;
+  const completed = data[selectedMember].filter(t=>t.completed).length;
+  const percent = total ? Math.round(completed/total*100) : 0;
+  progressDiv.textContent = `Progress: ${completed}/${total} (${percent}%)`;
+}
+
+// Render tasks
+function renderTasks(){
+  taskList.innerHTML = "";
+  if(!selectedMember) return memberTitle.textContent="Select a member";
+  memberTitle.textContent = selectedMember + "'s Tasks";
+  renderProgress();
+
+  data[selectedMember].forEach((task,i)=>{
+    const li = document.createElement("li");
+
+    const row = document.createElement("div");
+    row.className = "task-row";
+
+    const text = document.createElement("span");
+    text.className = "task-text";
+    text.innerHTML = task.completed ? "✔️ " + task.text : task.text;
+    row.appendChild(text);
+
+    const info = document.createElement("div");
+    info.className = "task-info";
+    const created = task.createdAt ? new Date(task.createdAt).toLocaleString() : "No timestamp";
+
+    let dueText = "No due date";
+    let dueColor = "#666";
+    let overdueLabel = "";
+
+    if(task.dueDate){
+      const dueDateObj = new Date(task.dueDate);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      dueText = dueDateObj.toLocaleDateString();
+      if(!task.completed && dueDateObj < today){
+        dueColor = "#e74c3c";
+        overdueLabel = "PAST DUE";
+      }
+    }
+
+    info.textContent = `Created: ${created} • Due: ${dueText}`;
+    info.style.color = dueColor;
+    row.appendChild(info);
+
+    const status = document.createElement("span");
+    status.className = "status " + (task.completed ? "completed" : "pending");
+    status.textContent = task.completed ? "COMPLETED" : "PENDING";
+    row.appendChild(status);
+
+    if(overdueLabel){
+      const pastDue = document.createElement("span");
+      pastDue.className = "pastdue";
+      pastDue.textContent = overdueLabel;
+      row.appendChild(pastDue);
+    }
+
+    const btnRow = document.createElement("div");
+    btnRow.className = "btnRow";
+
+    if(!task.completed){
+      const completeBtn = document.createElement("button");
+      completeBtn.className="smallBtn completeBtn";
+      completeBtn.textContent="Complete";
+      completeBtn.onclick = async ()=>{
+        task.completed = true;
+        await saveTasks();
+        confetti();
+      };
+      btnRow.appendChild(completeBtn);
+    }
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className="smallBtn deleteBtn";
+    deleteBtn.textContent="Remove";
+    deleteBtn.onclick = async ()=>{
+      if(!isAdmin) return alert("Admin only");
+      data[selectedMember].splice(i,1);
+      await saveTasks();
+    };
+    btnRow.appendChild(deleteBtn);
+
+    row.appendChild(btnRow);
+    li.appendChild(row);
+    taskList.appendChild(li);
+  });
+}
+
+// Save tasks
+async function saveTasks(){
+  await db.collection("tasks").doc(selectedMember).set({ tasks: data[selectedMember] });
+}
+
+// Add task
+addTaskBtn.onclick = async ()=>{
+  if(!isAdmin) return alert("Admin only");
+  if(!newTaskInput.value.trim()) return;
+  popup.style.display="flex";
+};
+
+// Popup actions
+popupOk.onclick = async ()=>{
+  const dueDate = popupDate.value;
+  data[selectedMember].push({
+    text: newTaskInput.value,
+    completed:false,
+    createdAt: Date.now(),
+    dueDate: dueDate
+  });
+  newTaskInput.value="";
+  popupDate.value="";
+  popup.style.display="none";
+  await saveTasks();
+};
+
+popupCancel.onclick = ()=> popup.style.display="none";
+
+// Chart + Performance
+function renderChart(){
+  const labels = members;
+  const total = [];
+  const completed = [];
+  const pending = [];
+  const overdue = [];
+
+  members.forEach(m=>{
+    const tasks = data[m] || [];
+    total.push(tasks.length);
+    completed.push(tasks.filter(t=>t.completed).length);
+    pending.push(tasks.filter(t=>!t.completed).length);
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const over = tasks.filter(t => {
+      if(!t.dueDate) return false;
+      const due = new Date(t.dueDate);
+      return !t.completed && due < today;
+    }).length;
+    overdue.push(over);
+  });
+
+  const ctx = document.getElementById("chart").getContext("2d");
+  if(chart) chart.destroy();
+
+  chart = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels: labels,
+      datasets:[
+        { label:"Total", data: total, backgroundColor:"rgba(45,108,223,0.7)" },
+        { label:"Completed", data: completed, backgroundColor:"rgba(46,204,113,0.7)" },
+        { label:"Pending", data: pending, backgroundColor:"rgba(241,196,15,0.7)" }
+      ]
+    },
+    options:{
+      responsive:true,
+      scales:{ y:{ beginAtZero:true } }
+    }
+  });
+
+  const top = labels[completed.indexOf(Math.max(...completed))] || "-";
+  const mostOverdue = labels[overdue.indexOf(Math.max(...overdue))] || "-";
+
+  document.getElementById("topPerformer").textContent = top;
+  document.getElementById("mostCompleted").textContent = top;
+  document.getElementById("mostOverdue").textContent = mostOverdue;
+}
+
+// Run
+setupRealtime();
+</script>
 </body>
 </html>
