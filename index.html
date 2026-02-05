@@ -614,27 +614,6 @@ function renderTasks(){
   taskList.innerHTML = "";
   if(!selectedMember) return memberTitle.textContent="Select a member";
   memberTitle.textContent = selectedMember + "'s Tasks";
-
-// ===== Add Last Visited Section =====
-const memberDoc = await db.collection("tasks").doc(selectedMember).get();
-let lastVisitedText = "";
-if(memberDoc.exists && memberDoc.data().lastVisited){
-  const lvDate = new Date(memberDoc.data().lastVisited);
-  lastVisitedText = `Last visited: ${lvDate.toLocaleDateString()} ${lvDate.toLocaleTimeString()}`;
-}
-
-let lastVisitedDiv = document.getElementById("lastVisitedDiv");
-if(!lastVisitedDiv){
-  lastVisitedDiv = document.createElement("div");
-  lastVisitedDiv.id = "lastVisitedDiv";
-  lastVisitedDiv.style.fontSize = "0.8em";
-  lastVisitedDiv.style.color = "#666";
-  lastVisitedDiv.style.textAlign = "right";
-  lastVisitedDiv.style.marginBottom = "8px";
-  memberTitle.parentNode.insertBefore(lastVisitedDiv, memberTitle.nextSibling);
-}
-lastVisitedDiv.textContent = lastVisitedText;
-
   renderProgress();
 
   data[selectedMember].forEach((task,i)=>{
@@ -799,4 +778,3 @@ setupRealtime();
 </script>
 </body>
 </html>
-
