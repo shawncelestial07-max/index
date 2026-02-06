@@ -470,6 +470,51 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+// ===== Visit Logging Code =====
+
+function getDeviceInfo() {
+  const ua = navigator.userAgent;
+
+  // Basic device type detection
+  let deviceType = "Desktop";
+  if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) deviceType = "Mobile";
+  if (/Tablet|iPad/i.test(ua)) deviceType = "Tablet";
+
+  // OS detection (basic)
+  let os = "Unknown OS";
+  if (/Windows NT/i.test(ua)) os = "Windows";
+  else if (/Mac OS X/i.test(ua)) os = "macOS";
+  else if (/Android/i.test(ua)) os = "Android";
+  else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+  else if (/Linux/i.test(ua)) os = "Linux";
+
+  // Browser detection (basic)
+  let browser = "Unknown Browser";
+  if (/Chrome/i.test(ua) && !/Edge/i.test(ua)) browser = "Chrome";
+  else if (/Firefox/i.test(ua)) browser = "Firefox";
+  else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "Safari";
+  else if (/Edge/i.test(ua)) browser = "Edge";
+  else if (/Opera|OPR/i.test(ua)) browser = "Opera";
+
+  return { deviceType, os, browser, userAgent: ua };
+}
+
+async function logVisit() {
+  const visitInfo = getDeviceInfo();
+  visitInfo.openedAt = Date.now();
+
+  try {
+    await db.collection("visits").add(visitInfo);
+    console.log("Visit logged:", visitInfo);
+  } catch (e) {
+    console.error("Error logging visit:", e);
+  }
+}
+
+// Log visit immediately when page loads
+logVisit();
+
+
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar","Yvone"];
 let selectedMember = localStorage.getItem("selectedMember") || null;
 let data = {};
@@ -816,6 +861,7 @@ setupRealtime();
 </script>
 </body>
 </html>
+
 
 
 
