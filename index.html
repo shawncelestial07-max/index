@@ -629,7 +629,7 @@ function renderProgress(){
 // Render tasks
 async function renderTasks(){
   taskList.innerHTML = "";
-  if(!selectedMember) return memberTitle.textContent="Select a member";
+  if(!selectedMember) return memberTitle.textContent="All in the Mind: Psychological Influences on College Students’ Smoking Behavior — A Mixed-Methods";
   memberTitle.textContent = selectedMember + "'s Tasks";
   // ===== Last Visited Section =====
 db.collection("tasks").doc(selectedMember).get().then(memberDoc => {
@@ -816,6 +816,7 @@ setupRealtime();
 </script>
 </body>
 </html>
+
 
 
 
