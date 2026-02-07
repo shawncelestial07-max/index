@@ -470,17 +470,17 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// ===== Visit Logging with Timestamp =====
+// ===== Visit Logging Code =====
 
 function getDeviceInfo() {
   const ua = navigator.userAgent;
 
-  // Device type
+  // Basic device type detection
   let deviceType = "Desktop";
   if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) deviceType = "Mobile";
   if (/Tablet|iPad/i.test(ua)) deviceType = "Tablet";
 
-  // OS detection
+  // OS detection (basic)
   let os = "Unknown OS";
   if (/Windows NT/i.test(ua)) os = "Windows";
   else if (/Mac OS X/i.test(ua)) os = "macOS";
@@ -488,7 +488,7 @@ function getDeviceInfo() {
   else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
   else if (/Linux/i.test(ua)) os = "Linux";
 
-  // Browser detection
+  // Browser detection (basic)
   let browser = "Unknown Browser";
   if (/Chrome/i.test(ua) && !/Edge/i.test(ua)) browser = "Chrome";
   else if (/Firefox/i.test(ua)) browser = "Firefox";
@@ -501,9 +501,7 @@ function getDeviceInfo() {
 
 async function logVisit() {
   const visitInfo = getDeviceInfo();
-
-  // Store timestamp as Firestore Timestamp
-  visitInfo.openedAt = firebase.firestore.Timestamp.now();
+  visitInfo.openedAt = Date.now();
 
   try {
     await db.collection("visits").add(visitInfo);
@@ -515,7 +513,6 @@ async function logVisit() {
 
 // Log visit immediately when page loads
 logVisit();
-
 
 
 const members = ["Meca","Johny","Jerome","Carl","Shawn","Jomar","Yvone"];
@@ -864,7 +861,6 @@ setupRealtime();
 </script>
 </body>
 </html>
-
 
 
 
