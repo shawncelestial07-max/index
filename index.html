@@ -675,7 +675,25 @@ function renderProgress(){
 async function renderTasks(){
   taskList.innerHTML = "";
   if(!selectedMember) return memberTitle.textContent="All in the Mind: Psychological Influences on College Students’ Smoking Behavior — A Mixed-Methods";
+  memberTitle.textContent = selectedMember + "'s Tasks"; // Hide add task input & button
+    newTaskInput.style.display = "none";
+    addTaskBtn.style.display = "none";
+
+    return;
+  }
+
+  // Member selected → show input & button
+  newTaskInput.style.display = "block";
+  addTaskBtn.style.display = "block";
+
   memberTitle.textContent = selectedMember + "'s Tasks";
+
+  renderProgress();
+
+  data[selectedMember].forEach((task, i) => {
+    // ...existing code to render tasks
+  });
+}
   // ===== Last Visited Section =====
 db.collection("tasks").doc(selectedMember).get().then(memberDoc => {
   let lastVisitedText = "";
@@ -861,6 +879,7 @@ setupRealtime();
 </script>
 </body>
 </html>
+
 
 
 
